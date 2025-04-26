@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "thats-not-my-ai"
+version = "0.1.0"
+description = ""
+authors = ["Ella <ella.bettison@xapien.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+google-genai = "^1.12.1"
+dearpygui = "^2.0.0"
+pyqt5 = "^5.15.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
