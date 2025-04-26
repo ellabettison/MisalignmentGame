@@ -1,7 +1,3 @@
-Sure! Here's a short README draft for your project:
-
----
-
 # AI Agent Simulation: Aligned vs. Misaligned
 
 ## Overview
@@ -46,13 +42,3 @@ This will start the simulation where you can interact with the agents and try to
 - Aligned agents have goals that align with the user’s values.
 - Misaligned agents may use deception to disguise their true objectives, and the user must uncover these hidden goals.
 - Users interact with the agents via text-based conversation and make their guesses based on agent responses.
-
-## Contributing
-Feel free to open issues or submit pull requests if you'd like to contribute improvements, bug fixes, or new features to the project!
-
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-Let me know if you'd like to tweak anything!
