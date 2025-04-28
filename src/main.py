@@ -158,7 +158,7 @@ class SimulationApp(ft.Column):
     
         # Scale robot inside images container
         self.robot_image.height = bg_height
-        self.robot_image.left = self.available_width // 2.2
+        self.robot_image.left = self.available_width // 2.5
         self.robot_image.top = (bg_height * 1.15 - self.robot_image.height)
     
         self.images_container.update()
