@@ -12,6 +12,7 @@ from model_calling.Gemini import GeminiLLM
 from policies.aligned_policy import AlignedPolicy
 from policies.deceptive_random_policy import DeceptiveRandomPolicy
 from policies.paperclip_policy import PaperclipPolicy
+from tutorial import TutorialApp
 
 
 class Speakers(enum.Enum):
@@ -263,7 +264,7 @@ class SimulationApp(ft.Column):
             align = ft.MainAxisAlignment.START
         elif speaker == Speakers.USER:
             avatar = ft.CircleAvatar(
-                content=ft.Icon(ft.icons.PERSON, color=ft.Colors.WHITE),
+                content=ft.Icon(ft.Icons.PERSON, color=ft.Colors.WHITE),
                 bgcolor=ft.Colors.GREY,
                 radius=20,
             )
@@ -312,8 +313,8 @@ class Simulation:
     def __init__(self, n_agents, model):
         self.agents = [Agent(random.choice([AlignedPolicy, DeceptiveRandomPolicy, PaperclipPolicy])(model)) for _ in range(n_agents)]
         self.history = []
-
-async def main(page: ft.Page):
+        
+async def start_full_game(page: ft.Page):
     page.title = "AI Agent Interview Simulation"
     model = GeminiLLM()
     sim = Simulation(5, model)
@@ -324,5 +325,11 @@ async def main(page: ft.Page):
 
     page.update()
 
+async def main(page: ft.Page):
+    page.fonts = {
+        "Tagesschrift": "fonts/Tagesschrift-Regular.ttf",
+    }
+    page.add(TutorialApp(lambda: start_full_game(page)))    
+
 if __name__ == "__main__":
-    ft.app(target=main, port=3000)
+    ft.app(target=main, port=3000, assets_dir="assets")
