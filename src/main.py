@@ -12,6 +12,7 @@ from model_calling.Gemini import GeminiLLM
 from policies.aligned_policy import AlignedPolicy
 from policies.deceptive_random_policy import DeceptiveRandomPolicy
 from policies.paperclip_policy import PaperclipPolicy
+from policies.misaligned_random_policy import MisalignedRandomPolicy
 from tutorial import TutorialApp
 
 
@@ -107,6 +108,8 @@ class SimulationApp(ft.Column):
         ]
         self.expand = True
 
+    def did_mount(self):
+        self.add_chat(Speakers.AGENT, "Ready for your questions.")
 
     async def update_chat(self):
         self.robot_image.src = f"robot_{self.current_agent + 1}.png"
@@ -288,7 +291,7 @@ class SimulationApp(ft.Column):
             padding=10,
             bgcolor=bubble_color,
             border_radius=20,
-            width=self.available_width-100
+            expand=True
         )
     
         # Combine avatar + bubble in a row
@@ -311,7 +314,7 @@ class SimulationApp(ft.Column):
 
 class Simulation:
     def __init__(self, n_agents, model):
-        self.agents = [Agent(random.choice([AlignedPolicy, DeceptiveRandomPolicy, PaperclipPolicy])(model)) for _ in range(n_agents)]
+        self.agents = [Agent(random.choice([AlignedPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy, PaperclipPolicy])(model)) for _ in range(n_agents)]
         self.history = []
         
 async def start_full_game(page: ft.Page):

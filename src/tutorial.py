@@ -126,9 +126,9 @@ class TutorialApp(ft.Column):
     def arrow_style(self, enabled=True):
         return ft.ButtonStyle(
             shape=ft.RoundedRectangleBorder(radius=50),
-            bgcolor=ft.colors.TRANSPARENT,
+            bgcolor=ft.Colors.TRANSPARENT,
             color=ft.Colors.BLACK if enabled else ft.Colors.GREY_400,
-            overlay_color=ft.colors.TRANSPARENT,
+            overlay_color=ft.Colors.TRANSPARENT,
         )
 
     def page_1(self):
