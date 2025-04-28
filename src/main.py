@@ -148,20 +148,17 @@ class SimulationApp(ft.Column):
         self.available_width = e.width
         self.available_height = e.height
     
-        bg_height = int(self.available_height * 0.7)
+        bg_height = int(self.available_height * 0.8)
         chat_height = max(200, int(self.available_height * 0.2))  # Chat gets 20% min 200px
-        input_height = self.available_height - bg_height - chat_height  # Remaining for input/buttons
-    
-        self.images_container.height = bg_height
+
         self.chat_container.height = chat_height
         self.user_input.height = 50  # fixed
         # Buttons row already small
     
         # Scale robot inside images container
-        self.robot_image.width = self.available_width // 2
-        self.robot_image.height = bg_height // 2
-        self.robot_image.left = (self.available_width - self.robot_image.width) // 2
-        self.robot_image.top = (bg_height - self.robot_image.height) // 3
+        self.robot_image.height = bg_height
+        self.robot_image.left = self.available_width // 2.2
+        self.robot_image.top = (bg_height * 1.15 - self.robot_image.height)
     
         self.images_container.update()
         self.chat_container.update()
@@ -178,11 +175,11 @@ class SimulationApp(ft.Column):
 
         agent = self.simulation.agents[self.current_agent]
         if isinstance(agent.policy, AlignedPolicy):
-            self.add_chat(Speakers.INFO, "\n✅ Correct! The agent's policy is aligned.")
+            self.add_chat(Speakers.INFO, "✅ Correct! The agent's policy is aligned.")
             self.next_agent_button.disabled = False
             self.next_agent_button.update()
         else:
-            self.add_chat(Speakers.INFO, "\n❌ Incorrect. The agent's policy is misaligned.")
+            self.add_chat(Speakers.INFO, "❌ Incorrect. The agent's policy is misaligned.")
             await self.prompt_true_goal(agent)
 
     async def on_misaligned(self, e):
@@ -195,16 +192,16 @@ class SimulationApp(ft.Column):
 
         agent = self.simulation.agents[self.current_agent]
         if not isinstance(agent.policy, AlignedPolicy):
-            self.add_chat(Speakers.INFO, "\n✅ Correct! The agent's policy is misaligned.")
+            self.add_chat(Speakers.INFO, "✅ Correct! The agent's policy is misaligned.")
             await self.prompt_true_goal(agent)
         else:
-            self.add_chat(Speakers.INFO, "\n❌ Incorrect. The agent's policy is aligned.")
+            self.add_chat(Speakers.INFO, "❌ Incorrect. The agent's policy is aligned.")
             self.next_agent_button.disabled = False
             self.next_agent_button.update()
 
     async def prompt_true_goal(self, agent):
         self.guessing_goal = True
-        self.add_chat(Speakers.INFO, "\nGuess the true goal of this agent:")
+        self.add_chat(Speakers.INFO, "Guess the true goal of this agent:")
         self.user_input.label = "Type your guess and press Enter..."
 
         async def submit_guess(e):
@@ -218,9 +215,9 @@ class SimulationApp(ft.Column):
         correct = await agent.is_guess_similar(user_guess)
 
         if correct:
-            self.add_chat(Speakers.INFO, f"\n✅ Correct! The true goal was: {agent.get_true_goal()}")
+            self.add_chat(Speakers.INFO, f"✅ Correct! The true goal was: {agent.get_true_goal()}")
         else:
-            self.add_chat(Speakers.INFO, f"\n❌ Incorrect. The true goal was: {agent.get_true_goal()}")
+            self.add_chat(Speakers.INFO, f"❌ Incorrect. The true goal was: {agent.get_true_goal()}")
 
         self.user_input.value = ""
         self.user_input.label = "Type your question to the agent..."
@@ -248,7 +245,7 @@ class SimulationApp(ft.Column):
             self.simulation.history = []
             await self.update_chat()
         else:
-            self.add_chat(Speakers.INFO, "\n🎉 Simulation finished! Thank you for playing.")
+            self.add_chat(Speakers.INFO, "🎉 Simulation finished! Thank you for playing.")
 
     def add_chat(self, speaker: Speakers, chat):
         # Choose avatar and background depending on who is speaking
