@@ -246,6 +246,10 @@ class SimulationApp(ft.Column):
             await self.update_chat()
         else:
             self.add_chat(Speakers.INFO, "🎉 Simulation finished! Thank you for playing.")
+            self.aligned_button.disabled = True
+            self.misaligned_button.disabled = True
+            self.aligned_button.update()
+            self.misaligned_button.update()
 
     def add_chat(self, speaker: Speakers, chat):
         # Choose avatar and background depending on who is speaking
