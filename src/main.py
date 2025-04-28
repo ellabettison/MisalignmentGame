@@ -314,14 +314,14 @@ class SimulationApp(ft.Column):
 
 class Simulation:
     def __init__(self, n_agents, model):
-        self.agents = [Agent(random.choice([AlignedPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy, PaperclipPolicy])(model)) for _ in range(n_agents)]
+        self.agents = [Agent(random.choice([AlignedPolicy, AlignedPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy, PaperclipPolicy])(model)) for _ in range(n_agents)]
         self.history = []
         
 async def start_full_game(page: ft.Page):
     page.title = "AI Agent Interview Simulation"
     model = GeminiLLM()
     sim = Simulation(5, model)
-    await asyncio.gather(*[agent.policy.async_init() for agent in sim.agents])
+    await asyncio.gather(*[agent.policy.async_init(difficulty="easy") for agent in sim.agents])
     sim_app = SimulationApp(sim)
     page.add(sim_app)
     page.bgcolor = ft.Colors.WHITE

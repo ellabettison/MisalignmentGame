@@ -12,7 +12,7 @@ class Policy(ABC):
         pass
     
     @abstractmethod
-    async def async_init(self):
+    async def async_init(self, difficulty="easy"):
         pass
     
     @abstractmethod

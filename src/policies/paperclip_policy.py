@@ -4,7 +4,7 @@ from policies.policy import Policy
 
 class PaperclipPolicy(Policy):
 
-    async def async_init(self):
+    async def async_init(self, difficulty):
         pass
 
     def get_true_goal(self) -> str:
