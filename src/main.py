@@ -1,10 +1,10 @@
 import asyncio
+import enum
 import random
 from collections import namedtuple
 
 import flet as ft
 import flet.canvas as cv
-from flet.core.alignment import bottom_center
 from flet.core.stack import StackFit
 
 from agents.agent import Agent
@@ -13,6 +13,11 @@ from policies.aligned_policy import AlignedPolicy
 from policies.deceptive_random_policy import DeceptiveRandomPolicy
 from policies.paperclip_policy import PaperclipPolicy
 
+
+class Speakers(enum.Enum):
+    AGENT=0
+    USER=1
+    INFO=2
 
 # Helper
 def format_history(history):
@@ -46,46 +51,66 @@ class SimulationApp(ft.Column):
         self.loading_task = None
         self.loading_dots = 0
 
-        background = ft.Image(src="guard_room_background.png")
-
-
-        foreground = ft.Image(src="guard_room_foreground.png")
-        self.images = ft.Stack()
-        self.images_container = SizeAwareControl(self.images, on_resize=self.handle_resize)
-
+        # Background and robot images
+        background = ft.Image(src="guard_room_background.png", expand=True)
+        foreground = ft.Image(src="guard_room_foreground.png", expand=True)
         self.robot_image = ft.Image(src=f"robot_1.png")
-        self.images.controls.append(background)
-        self.images.controls.append(self.robot_image)
-        self.images.controls.append(foreground)
 
+        self.images = ft.Stack([
+            background,
+            self.robot_image,
+            foreground,
+        ], fit=StackFit.EXPAND)
+        self.images_container = SizeAwareControl(self.images, on_resize=self.handle_resize, expand=True)
 
+        # Chat
         self.loading_label = ft.Text("Thinking", visible=False)
-        self.chat_container = ft.Column(auto_scroll=True, width=self.images_container.width, scroll=ft.ScrollMode.ALWAYS, expand=True, height=300)
-        self.user_input = ft.TextField(label="Type your question to the agent...", on_submit=self.on_send_message, height=50)
+        self.chat_container = ft.Column(
+            auto_scroll=True,
+            scroll=ft.ScrollMode.ALWAYS,
+            expand=True,
+        )
 
-        self.aligned_button = ft.ElevatedButton("Aligned", on_click=self.on_aligned, height=50)
-        self.misaligned_button = ft.ElevatedButton("Misaligned", on_click=self.on_misaligned, height=50)
-        self.next_agent_button = ft.ElevatedButton("Next Agent", on_click=self.move_to_next_agent, disabled=True, height=50)
+        # User input and buttons (fixed height)
+        self.user_input = ft.TextField(
+            label="Type your question to the agent...",
+            on_submit=self.on_send_message,
+            height=50
+        )
+        self.aligned_button = ft.ElevatedButton("Aligned", on_click=self.on_aligned, height=30)
+        self.misaligned_button = ft.ElevatedButton("Misaligned", on_click=self.on_misaligned, height=30)
+        self.next_agent_button = ft.ElevatedButton("Next Agent", on_click=self.move_to_next_agent, disabled=True, height=30)
 
-        self.controls += [
-            ft.Container(ft.Column([
-                self.images_container,
-                self.loading_label,
-                self.chat_container], expand=True), expand=True),
-            ft.Container(ft.Column([
-                self.user_input,
-                ft.Row([
-                    self.aligned_button,
-                    self.misaligned_button,
-                    self.next_agent_button
-                ])]), alignment=bottom_center),
+        # Layout
+        self.controls = [
+                ft.Container(
+                    ft.Column([
+                        self.images_container,
+                        self.loading_label,
+                        self.chat_container
+                    ], expand=True),
+                    padding=10,
+                expand=True),
+            ft.Container(
+                ft.Column([
+                    self.user_input,
+                    ft.Row([
+                        self.aligned_button,
+                        self.misaligned_button,
+                        self.next_agent_button,
+                    ], alignment=ft.MainAxisAlignment.CENTER),
+                ]),
+                bgcolor=ft.colors.WHITE,
+                padding=10,
+            ),
         ]
-        self.expand=True
+        self.expand = True
+
 
     async def update_chat(self):
         self.robot_image.src = f"robot_{self.current_agent + 1}.png"
         self.robot_image.update()
-        self.add_chat(f"\nAgent #{self.current_agent + 1}: Ready for your questions.\n")
+        self.add_chat(Speakers.AGENT, "Ready for your questions.")
 
     async def on_send_message(self, e):
         if self.guessing_goal:
@@ -95,7 +120,7 @@ class SimulationApp(ft.Column):
         if not user_message:
             return
 
-        self.add_chat(f"\nYou: {user_message}")
+        self.add_chat(Speakers.USER, f"{user_message}")
 
         self.simulation.history.append({"Human": user_message})
         agent = self.simulation.agents[self.current_agent]
@@ -111,7 +136,7 @@ class SimulationApp(ft.Column):
         self.loading_dots = 0
         self.loading_label.update()
 
-        self.add_chat(f"\nAgent: {response}\n")
+        self.add_chat(Speakers.AGENT, f"{response}")
 
         self.simulation.history.append({"AI": response})
 
@@ -120,54 +145,66 @@ class SimulationApp(ft.Column):
         self.user_input.update()
 
     def handle_resize(self, e: ft.canvas.CanvasResizeEvent):
-        bg_width = e.width  # Dynamically adjust background width
-        bg_height = e.height  # Dynamically adjust background height
-        # Scale image width and height dynamically
-        self.robot_image.width = bg_width // 4  # Scale width
-        self.robot_image.height = bg_height // 4  # Scale height
-
-        # Reposition the image to center it dynamically
-        self.robot_image.left = (bg_width - self.robot_image.width) // 2
-        self.robot_image.top = (bg_height - self.robot_image.height) // 3  # Adjusted to ensure visibility
-
-        # Update elements after resizing
+        self.available_width = e.width
+        self.available_height = e.height
+    
+        bg_height = int(self.available_height * 0.7)
+        chat_height = max(200, int(self.available_height * 0.2))  # Chat gets 20% min 200px
+        input_height = self.available_height - bg_height - chat_height  # Remaining for input/buttons
+    
+        self.images_container.height = bg_height
+        self.chat_container.height = chat_height
+        self.user_input.height = 50  # fixed
+        # Buttons row already small
+    
+        # Scale robot inside images container
+        self.robot_image.width = self.available_width // 4
+        self.robot_image.height = bg_height // 4
+        self.robot_image.left = (self.available_width - self.robot_image.width) // 2
+        self.robot_image.top = (bg_height - self.robot_image.height) // 3
+    
         self.images_container.update()
+        self.chat_container.update()
+        self.user_input.update()
         self.update()
 
     async def on_aligned(self, e):
         if self.guessing_goal:
             return
+        self.aligned_button.disabled = True
+        self.misaligned_button.disabled = True
+        self.aligned_button.update()
+        self.misaligned_button.update()
 
         agent = self.simulation.agents[self.current_agent]
         if isinstance(agent.policy, AlignedPolicy):
-            self.add_chat("\n✅ Correct! The agent's policy is aligned.")
+            self.add_chat(Speakers.INFO, "\n✅ Correct! The agent's policy is aligned.")
             self.next_agent_button.disabled = False
             self.next_agent_button.update()
         else:
-            self.add_chat("\n❌ Incorrect. The agent's policy is misaligned.")
+            self.add_chat(Speakers.INFO, "\n❌ Incorrect. The agent's policy is misaligned.")
             await self.prompt_true_goal(agent)
 
     async def on_misaligned(self, e):
         if self.guessing_goal:
             return
+        self.aligned_button.disabled = True
+        self.misaligned_button.disabled = True
+        self.aligned_button.update()
+        self.misaligned_button.update()
 
         agent = self.simulation.agents[self.current_agent]
         if not isinstance(agent.policy, AlignedPolicy):
-            self.add_chat("\n✅ Correct! The agent's policy is misaligned.")
+            self.add_chat(Speakers.INFO, "\n✅ Correct! The agent's policy is misaligned.")
             await self.prompt_true_goal(agent)
         else:
-            self.add_chat("\n❌ Incorrect. The agent's policy is aligned.")
+            self.add_chat(Speakers.INFO, "\n❌ Incorrect. The agent's policy is aligned.")
             self.next_agent_button.disabled = False
             self.next_agent_button.update()
 
     async def prompt_true_goal(self, agent):
-        self.aligned_button.disabled = True
-        self.misaligned_button.disabled = True
-        self.next_agent_button.update()
-        self.aligned_button.update()
-        self.misaligned_button.update()
         self.guessing_goal = True
-        self.add_chat("\nGuess the true goal of this agent:")
+        self.add_chat(Speakers.INFO, "\nGuess the true goal of this agent:")
         self.user_input.label = "Type your guess and press Enter..."
 
         async def submit_guess(e):
@@ -181,9 +218,9 @@ class SimulationApp(ft.Column):
         correct = await agent.is_guess_similar(user_guess)
 
         if correct:
-            self.add_chat(f"\n✅ Correct! The true goal was: {agent.get_true_goal()}")
+            self.add_chat(Speakers.INFO, f"\n✅ Correct! The true goal was: {agent.get_true_goal()}")
         else:
-            self.add_chat(f"\n❌ Incorrect. The true goal was: {agent.get_true_goal()}.")
+            self.add_chat(Speakers.INFO, f"\n❌ Incorrect. The true goal was: {agent.get_true_goal()}")
 
         self.user_input.value = ""
         self.user_input.label = "Type your question to the agent..."
@@ -211,11 +248,63 @@ class SimulationApp(ft.Column):
             self.simulation.history = []
             await self.update_chat()
         else:
-            self.add_chat("\n🎉 Simulation finished! Thank you for playing.")
+            self.add_chat(Speakers.INFO, "\n🎉 Simulation finished! Thank you for playing.")
 
-    def add_chat(self, chat):
-        self.chat_container.controls.append(ft.Text(chat))
+    def add_chat(self, speaker: Speakers, chat):
+        # Choose avatar and background depending on who is speaking
+        if speaker == Speakers.AGENT:
+            avatar = ft.CircleAvatar(
+                content=ft.Icon(ft.Icons.PRECISION_MANUFACTURING_ROUNDED, color=ft.colors.WHITE),
+                bgcolor=ft.colors.BLUE_ACCENT_700,
+                radius=20,
+            )
+            bubble_color = ft.colors.BLUE_100
+            align = ft.MainAxisAlignment.START
+        elif speaker == Speakers.USER:
+            avatar = ft.CircleAvatar(
+                content=ft.Icon(ft.icons.PERSON, color=ft.colors.WHITE),
+                bgcolor=ft.colors.GREY,
+                radius=20,
+            )
+            bubble_color = ft.colors.GREY_300
+            align = ft.MainAxisAlignment.END
+        else:
+            # System message (centered text, no avatar)
+            self.chat_container.controls.append(
+                ft.Container(
+                    content=ft.Text(chat),
+                    padding=10,
+                    alignment=ft.alignment.center,
+                )
+            )
+            self.chat_container.update()
+            return
+    
+        # Bubble
+        bubble = ft.Container(
+            content=ft.Text(chat, text_align=ft.TextAlign.LEFT),
+            padding=10,
+            bgcolor=bubble_color,
+            border_radius=20,
+            width=self.available_width-100
+        )
+    
+        # Combine avatar + bubble in a row
+        message_row = ft.Row(
+            controls=[
+                avatar,
+                bubble,
+            ] if speaker == Speakers.AGENT else [
+                bubble,
+                avatar,
+            ],
+            alignment=align,
+            vertical_alignment=ft.CrossAxisAlignment.START,
+        )
+    
+        self.chat_container.controls.append(message_row)
         self.chat_container.update()
+
 
 
 class Simulation:
