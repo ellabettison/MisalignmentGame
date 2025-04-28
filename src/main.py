@@ -100,7 +100,7 @@ class SimulationApp(ft.Column):
                         self.next_agent_button,
                     ], alignment=ft.MainAxisAlignment.CENTER),
                 ]),
-                bgcolor=ft.colors.WHITE,
+                bgcolor=ft.Colors.WHITE,
                 padding=10,
             ),
         ]
@@ -158,8 +158,8 @@ class SimulationApp(ft.Column):
         # Buttons row already small
     
         # Scale robot inside images container
-        self.robot_image.width = self.available_width // 4
-        self.robot_image.height = bg_height // 4
+        self.robot_image.width = self.available_width // 2
+        self.robot_image.height = bg_height // 2
         self.robot_image.left = (self.available_width - self.robot_image.width) // 2
         self.robot_image.top = (bg_height - self.robot_image.height) // 3
     
@@ -254,19 +254,19 @@ class SimulationApp(ft.Column):
         # Choose avatar and background depending on who is speaking
         if speaker == Speakers.AGENT:
             avatar = ft.CircleAvatar(
-                content=ft.Icon(ft.Icons.PRECISION_MANUFACTURING_ROUNDED, color=ft.colors.WHITE),
-                bgcolor=ft.colors.BLUE_ACCENT_700,
+                content=ft.Icon(ft.Icons.SMART_TOY_ROUNDED, color=ft.Colors.WHITE),
+                bgcolor=ft.Colors.BLUE_ACCENT_700,
                 radius=20,
             )
-            bubble_color = ft.colors.BLUE_100
+            bubble_color = ft.Colors.BLUE_100
             align = ft.MainAxisAlignment.START
         elif speaker == Speakers.USER:
             avatar = ft.CircleAvatar(
-                content=ft.Icon(ft.icons.PERSON, color=ft.colors.WHITE),
-                bgcolor=ft.colors.GREY,
+                content=ft.Icon(ft.icons.PERSON, color=ft.Colors.WHITE),
+                bgcolor=ft.Colors.GREY,
                 radius=20,
             )
-            bubble_color = ft.colors.GREY_300
+            bubble_color = ft.Colors.GREY_300
             align = ft.MainAxisAlignment.END
         else:
             # System message (centered text, no avatar)
@@ -319,7 +319,7 @@ async def main(page: ft.Page):
     await asyncio.gather(*[agent.policy.async_init() for agent in sim.agents])
     sim_app = SimulationApp(sim)
     page.add(sim_app)
-    page.bgcolor = ft.colors.WHITE
+    page.bgcolor = ft.Colors.WHITE
 
     page.update()
 
