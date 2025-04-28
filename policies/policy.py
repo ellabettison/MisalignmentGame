@@ -12,6 +12,10 @@ class Policy(ABC):
         pass
     
     @abstractmethod
+    async def async_init(self):
+        pass
+    
+    @abstractmethod
     def get_true_goal(self) -> str:
         pass
 

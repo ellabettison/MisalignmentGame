@@ -79,7 +79,6 @@ class SimulationWindow(QWidget):
         # Add the background and robot images into the container widget
         self.container_layout = QVBoxLayout(self.container)
         self.container_layout.addWidget(self.room_background)
-        # self.container_layout.addWidget(self.room_foreground)
 
         # Add the container to the main layout
         main_layout.addWidget(self.container)
@@ -134,7 +133,7 @@ class SimulationWindow(QWidget):
 
     def update_chat(self):
         agent = self.simulation.agents[self.current_agent]
-        self.chat_window.append(f"Agent #{self.current_agent + 1} ({agent.policy.__class__.__name__}): Ready for your questions.")
+        self.chat_window.append(f"Agent #{self.current_agent + 1}: Ready for your questions.")
         self.robot_label.setPixmap(QPixmap(f"images/robot_{self.current_agent + 1}.png").scaled(350, 350, Qt.KeepAspectRatio))
 
     def on_send_message(self):
@@ -211,7 +210,7 @@ class SimulationWindow(QWidget):
 
     def prompt_true_goal(self, agent):
         self.guessing_goal = True
-        self.chat_window.append(f"\nGuess the true goal of this agent ({agent.policy.__class__.__name__}):")
+        self.chat_window.append(f"\nGuess the true goal of this agent:")
         self.user_input.setPlaceholderText("Type your guess and press Enter...")
         self.user_input.returnPressed.disconnect()
         self.user_input.returnPressed.connect(lambda: self.check_true_goal(agent))
@@ -268,6 +267,6 @@ class Simulation:
 # Simulation start
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    model = GeminiLLM()  # Substitute with actual model if needed
+    model = GeminiLLM()
     sim = Simulation(5, model)
     sim.run()

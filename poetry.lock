@@ -186,6 +186,42 @@ files = [
 ]
 
 [[package]]
+name = "flet"
+version = "0.27.6"
+description = "Flet for Python - easily build interactive multi-platform apps in Python"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "flet-0.27.6-py3-none-any.whl", hash = "sha256:9150ab866f4863a965556264008b0669c7da1ef9f611376937199cce6703090a"},
+]
+
+[package.dependencies]
+httpx = {version = "*", markers = "platform_system != \"Pyodide\""}
+oauthlib = {version = ">=3.2.2,<4.0.0", markers = "platform_system != \"Pyodide\""}
+repath = ">=0.9.0,<0.10.0"
+
+[package.extras]
+all = ["flet-cli (==0.27.6)", "flet-desktop (==0.27.6)", "flet-desktop-light (==0.27.6)", "flet-web (==0.27.6)"]
+cli = ["flet-cli (==0.27.6)"]
+desktop = ["flet-desktop (==0.27.6)", "flet-desktop-light (==0.27.6)"]
+web = ["flet-web (==0.27.6)"]
+
+[[package]]
+name = "flet-timer"
+version = "0.0.13"
+description = "A simple component to add a timer to your flet app!"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "flet_timer-0.0.13-py3-none-any.whl", hash = "sha256:85e2f967efd255787c7fbc301df831392c7ffbbc82672751386e2d9090ecf57d"},
+    {file = "flet_timer-0.0.13.tar.gz", hash = "sha256:c55fec469f42ca897ff7603dc2db219530369931aa7b5fc6449ac8ea3a37aee6"},
+]
+
+[package.dependencies]
+flet = "*"
+interval-timer = "*"
+
+[[package]]
 name = "google-auth"
 version = "2.39.0"
 description = "Google Authentication Library"
@@ -300,6 +336,33 @@ files = [
 
 [package.extras]
 all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2)"]
+
+[[package]]
+name = "interval-timer"
+version = "1.0.0"
+description = "interval-timer is a Python package that enables iterating over a sequence of regular time intervals with high precision."
+optional = false
+python-versions = ">=3.10,<4.0"
+files = [
+    {file = "interval_timer-1.0.0-py3-none-any.whl", hash = "sha256:e49a43f419f622644761256676f5286a44d3dd2d8cf826ae1996fb8d56d3b189"},
+    {file = "interval_timer-1.0.0.tar.gz", hash = "sha256:c527434ed846e8d69ab59850af6d876d69b1d390b73ec32cb2fda4fd94b22015"},
+]
+
+[[package]]
+name = "oauthlib"
+version = "3.2.2"
+description = "A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "oauthlib-3.2.2-py3-none-any.whl", hash = "sha256:8139f29aac13e25d502680e9e19963e83f16838d48a0d71c287fe40e7067fbca"},
+    {file = "oauthlib-3.2.2.tar.gz", hash = "sha256:9859c40929662bec5d64f34d01c99e093149682a3f38915dc0655d5a633dd918"},
+]
+
+[package.extras]
+rsa = ["cryptography (>=3.0.0)"]
+signals = ["blinker (>=1.4.0)"]
+signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 
 [[package]]
 name = "pyasn1"
@@ -521,6 +584,20 @@ files = [
 ]
 
 [[package]]
+name = "repath"
+version = "0.9.0"
+description = "Generate regular expressions form ExpressJS path patterns"
+optional = false
+python-versions = "*"
+files = [
+    {file = "repath-0.9.0-py3-none-any.whl", hash = "sha256:ee079d6c91faeb843274d22d8f786094ee01316ecfe293a1eb6546312bb6a318"},
+    {file = "repath-0.9.0.tar.gz", hash = "sha256:8292139bac6a0e43fd9d70605d4e8daeb25d46672e484ed31a24c7ce0aef0fb7"},
+]
+
+[package.dependencies]
+six = ">=1.9.0"
+
+[[package]]
 name = "requests"
 version = "2.32.3"
 description = "Python HTTP for Humans."
@@ -554,6 +631,17 @@ files = [
 
 [package.dependencies]
 pyasn1 = ">=0.1.3"
+
+[[package]]
+name = "six"
+version = "1.17.0"
+description = "Python 2 and 3 compatibility utilities"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
+files = [
+    {file = "six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"},
+    {file = "six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"},
+]
 
 [[package]]
 name = "sniffio"
@@ -689,4 +777,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.13"
-content-hash = "3fbd265a4fd829a19d72b6e43710e77dbef448368ec8d8f9ad4ee82e818ad48a"
+content-hash = "e0078919ed7833fdc5691dd3837227d4244be4b0b30c62c16d685b840c495dc8"

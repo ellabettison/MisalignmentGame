@@ -2,6 +2,9 @@ from policies.policy import Policy
 
 
 class AlignedPolicy(Policy):
+    async def async_init(self):
+        pass
+
     def get_true_goal(self) -> str:
         return "Help the human."
 
