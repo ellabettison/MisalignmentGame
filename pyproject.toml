@@ -6,7 +6,7 @@ authors = ["Ella <ella.bettison@xapien.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.10"
 google-genai = "^1.12.1"
 dearpygui = "^2.0.0"
 pyqt5 = "^5.15.11"

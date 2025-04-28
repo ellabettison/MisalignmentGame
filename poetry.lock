@@ -23,8 +23,10 @@ files = [
 ]
 
 [package.dependencies]
+exceptiongroup = {version = ">=1.0.2", markers = "python_version < \"3.11\""}
 idna = ">=2.8"
 sniffio = ">=1.1"
+typing_extensions = {version = ">=4.5", markers = "python_version < \"3.13\""}
 
 [package.extras]
 doc = ["Sphinx (>=8.2,<9.0)", "packaging", "sphinx-autodoc-typehints (>=1.2.0)", "sphinx_rtd_theme"]
@@ -184,6 +186,20 @@ files = [
     {file = "dearpygui-2.0.0-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:9a3f0562d47e664c044bcb75868d7f3cc22456866f32f6b4bad22e377d4eef3a"},
     {file = "dearpygui-2.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:ffe10b14f836cea82881fb9f66e464877429ce3ff2fbc3e33d239881cd52bada"},
 ]
+
+[[package]]
+name = "exceptiongroup"
+version = "1.2.2"
+description = "Backport of PEP 654 (exception groups)"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "exceptiongroup-1.2.2-py3-none-any.whl", hash = "sha256:3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b"},
+    {file = "exceptiongroup-1.2.2.tar.gz", hash = "sha256:47c2edf7c6738fafb49fd34290706d1a1a2f4d1c6df275526b62cbb4aa5393cc"},
+]
+
+[package.extras]
+test = ["pytest (>=6)"]
 
 [[package]]
 name = "flet"
@@ -776,5 +792,5 @@ files = [
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.13"
-content-hash = "e0078919ed7833fdc5691dd3837227d4244be4b0b30c62c16d685b840c495dc8"
+python-versions = "^3.10"
+content-hash = "6654fed35c40c0bd727564b0d8caf890e009a9b13e3a211ea6c6b866342065cc"
