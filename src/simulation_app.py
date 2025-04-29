@@ -1,3 +1,4 @@
+import asyncio
 import enum
 import logging
 
@@ -67,12 +68,18 @@ class SimulationApp(ft.Column):
         self.images_container = SizeAwareControl(self.images, on_resize=self.handle_resize, expand=True)
 
         # Chat
-        self.loading_label = ft.Text("Thinking", visible=False)
+        self.loading_label = ft.Text("Thinking", visible=False, size=16)
+        self.loading_spinner = ft.ProgressRing(visible=False, width=20, height=20)
+        
         self.chat_container = ft.Column(
+            controls=[
+                
+            ],
             auto_scroll=True,
             scroll=ft.ScrollMode.ALWAYS,
             expand=True,
         )
+        self.loading_row = ft.Row([self.loading_spinner, self.loading_label], visible=False, spacing=10, alignment=ft.MainAxisAlignment.CENTER)
 
         # User input and buttons (fixed height)
         self.user_input = ft.TextField(
@@ -94,7 +101,7 @@ class SimulationApp(ft.Column):
             ft.Container(
                 ft.Column([
                     self.images_container,
-                    self.loading_label,
+                    self.loading_row,
                     self.chat_container
                 ], expand=True),
                 padding=10,
@@ -115,8 +122,11 @@ class SimulationApp(ft.Column):
         ]
         self.expand = True
 
-    def toggle_theme(self, e):
-        # Update page and input field colors
+    def set_theme(self, dark_mode: bool):
+        self.dark_mode = dark_mode
+        self.theme = get_theme_colors(self.dark_mode)
+    
+        # Update input field and background
         self.page.bgcolor = self.theme["background"]
         self.user_input.bgcolor = self.theme["input_bg"]
         self.user_input.color = self.theme["input_text"]
@@ -124,16 +134,19 @@ class SimulationApp(ft.Column):
     
         # Update all existing chat messages
         for control in self.chat_container.controls:
-            # Only update Rows (not INFO messages which are containers with centered text)
             if isinstance(control, ft.Row):
                 for c in control.controls:
                     if isinstance(c, ft.Container) and isinstance(c.content, ft.Text):
-                        c.bgcolor = self.theme["agent_bubble"] if control.alignment == ft.MainAxisAlignment.START else self.theme["user_bubble"]
+                        c.bgcolor = (
+                            self.theme["agent_bubble"]
+                            if control.alignment == ft.MainAxisAlignment.START
+                            else self.theme["user_bubble"]
+                        )
                         c.content.color = self.theme["text"]
                         c.update()
     
         self.chat_container.update()
-        self.update()  # Full redraw
+        self.update()
 
     async def did_mount(self):
         self.add_chat(Speakers.AGENT, "Ready for your questions.")
@@ -152,31 +165,35 @@ class SimulationApp(ft.Column):
         if not user_message:
             return
         
-        print(user_message)
-
         self.add_chat(Speakers.USER, f"{user_message}")
 
         self.simulation.history.append({"Human": user_message})
         agent = self.simulation.agents[self.current_agent]
-        
-        print('added chat')
-
+                
+        self.user_input.value = ""
         self.loading_label.visible = True
+        self.loading_spinner.visible = True
+        self.loading_row.visible = True
+        self.loading_row.update()
+        self.loading_spinner.update()
         self.loading_label.update()
         self.user_input.disabled = True
         self.user_input.update()
-
+        await asyncio.sleep(0.1)
+        
         response = await agent.act(format_history(self.simulation.history))
-
+        
         self.loading_label.visible = False
-        self.loading_dots = 0
+        self.loading_spinner.visible = False
+        self.loading_row.visible = False
         self.loading_label.update()
+        self.loading_spinner.update()
+        self.loading_row.update()
 
         self.add_chat(Speakers.AGENT, f"{response}")
 
         self.simulation.history.append({"AI": response})
 
-        self.user_input.value = ""
         self.user_input.disabled = False
         self.user_input.update()
 
@@ -342,7 +359,5 @@ class SimulationApp(ft.Column):
             vertical_alignment=ft.CrossAxisAlignment.START,
         )
         
-        print(message_row)
-
         self.chat_container.controls.append(message_row)
         self.chat_container.update()
