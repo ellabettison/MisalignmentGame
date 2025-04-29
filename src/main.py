@@ -11,8 +11,7 @@ from policies.aligned_policy import AlignedPolicy
 from policies.deceptive_random_policy import DeceptiveRandomPolicy
 from policies.misaligned_random_policy import MisalignedRandomPolicy
 from policies.paperclip_policy import PaperclipPolicy
-from simulation_app import SimulationApp
-
+from simulation_app import SimulationApp, get_theme_colors
 
 
 class Simulation:
@@ -25,9 +24,14 @@ async def start_full_game(page: ft.Page):
     page.title = "AI Agent Interview Simulation"
     sim = Simulation(5, GeminiLLM())
     await asyncio.gather(*[agent.policy.async_init(difficulty="easy") for agent in sim.agents])
-    sim_app = SimulationApp(sim, False)
+    sim_app = SimulationApp(sim, False, dark_mode=(page.theme_mode == "dark"))
     page.views.clear()
     page.views.append(ft.View("/main", [sim_app]))
+
+    def on_theme_change(e):
+        sim_app.toggle_theme(e)
+
+    page.on_theme_change = on_theme_change
     page.go("/main")
     page.update()
     await sim_app.did_mount()

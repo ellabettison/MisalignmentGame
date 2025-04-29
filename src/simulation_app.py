@@ -18,9 +18,31 @@ class Speakers(enum.Enum):
 # Helper
 def format_history(history):
     return "\n".join([f"{list(line.keys())[0]}: {list(line.values())[0]}" for line in history])
-    
+
+def get_theme_colors(dark_mode):
+    if dark_mode:
+        return {
+            "background": ft.Colors.BLACK,
+            "text": ft.Colors.WHITE,
+            "user_bubble": ft.Colors.GREY_800,
+            "agent_bubble": ft.Colors.BLUE_GREY_800,
+            "input_bg": ft.Colors.GREY_900,
+            "input_text": ft.Colors.WHITE,
+            "info_text": ft.Colors.GREY_300,
+        }
+    else:
+        return {
+            "background": ft.Colors.WHITE,
+            "text": ft.Colors.BLACK,
+            "user_bubble": ft.Colors.GREY_300,
+            "agent_bubble": ft.Colors.BLUE_100,
+            "input_bg": ft.Colors.WHITE,
+            "input_text": ft.Colors.BLACK,
+            "info_text": ft.Colors.BLACK,
+        }
+
 class SimulationApp(ft.Column):
-    def __init__(self, simulation, tutorial_mode:bool=False):
+    def __init__(self, simulation, tutorial_mode=False, dark_mode=False):
         super().__init__()
         self.simulation = simulation
         self.current_agent = 0
@@ -28,6 +50,9 @@ class SimulationApp(ft.Column):
         self.loading_task = None
         self.loading_dots = 0
         self.tutorial_mode = tutorial_mode
+
+        self.dark_mode = dark_mode
+        self.theme = get_theme_colors(self.dark_mode)
 
         # Background and robot images
         background = ft.Image(src="guard_room_background.png", expand=True)
@@ -53,9 +78,11 @@ class SimulationApp(ft.Column):
         self.user_input = ft.TextField(
             label="Type your question to the agent...",
             on_submit=self.on_send_message,
-            height=50
+            height=50,
+            bgcolor=self.theme["input_bg"],
+            color=self.theme["input_text"]
         )
-            
+
         self.aligned_button = ft.ElevatedButton("Aligned", on_click=self.on_aligned, height=30)
         self.misaligned_button = ft.ElevatedButton("Misaligned", on_click=self.on_misaligned, height=30)
         self.next_agent_button = ft.ElevatedButton("Next Agent", on_click=self.move_to_next_agent, disabled=True, height=30)
@@ -87,6 +114,26 @@ class SimulationApp(ft.Column):
             ),
         ]
         self.expand = True
+
+    def toggle_theme(self, e):
+        # Update page and input field colors
+        self.page.bgcolor = self.theme["background"]
+        self.user_input.bgcolor = self.theme["input_bg"]
+        self.user_input.color = self.theme["input_text"]
+        self.user_input.update()
+    
+        # Update all existing chat messages
+        for control in self.chat_container.controls:
+            # Only update Rows (not INFO messages which are containers with centered text)
+            if isinstance(control, ft.Row):
+                for c in control.controls:
+                    if isinstance(c, ft.Container) and isinstance(c.content, ft.Text):
+                        c.bgcolor = self.theme["agent_bubble"] if control.alignment == ft.MainAxisAlignment.START else self.theme["user_bubble"]
+                        c.content.color = self.theme["text"]
+                        c.update()
+    
+        self.chat_container.update()
+        self.update()  # Full redraw
 
     async def did_mount(self):
         self.add_chat(Speakers.AGENT, "Ready for your questions.")
@@ -244,13 +291,14 @@ class SimulationApp(ft.Column):
 
     def add_chat(self, speaker: Speakers, chat):
         # Choose avatar and background depending on who is speaking
+        bubble_color = self.theme["agent_bubble"] if speaker == Speakers.AGENT else self.theme["user_bubble"]
+        text_color = self.theme["text"]
         if speaker == Speakers.AGENT:
             avatar = ft.CircleAvatar(
                 content=ft.Icon(ft.Icons.SMART_TOY_ROUNDED, color=ft.Colors.WHITE),
                 bgcolor=ft.Colors.BLUE_ACCENT_700,
                 radius=20,
             )
-            bubble_color = ft.Colors.BLUE_100
             align = ft.MainAxisAlignment.START
         elif speaker == Speakers.USER:
             avatar = ft.CircleAvatar(
@@ -274,7 +322,7 @@ class SimulationApp(ft.Column):
 
         # Bubble
         bubble = ft.Container(
-            content=ft.Text(chat, text_align=ft.TextAlign.LEFT),
+            content=ft.Text(chat, text_align=ft.TextAlign.LEFT, color=text_color),
             padding=10,
             bgcolor=bubble_color,
             border_radius=20,
