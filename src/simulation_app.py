@@ -16,7 +16,7 @@ from goal_generators.realistic_goal_generator import RealisticGoalGenerator
 from policies.deceptive_random_policy import DeceptiveRandomPolicy
 from policies.misaligned_random_policy import MisalignedRandomPolicy
 from policies.paperclip_policy import PaperclipPolicy
-from src.goal_generators.random_goal_generator import RandomGoalGenerator
+from goal_generators.random_goal_generator import RandomGoalGenerator
 from ui.size_aware_control import SizeAwareControl
 
 
