@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import random
 
 import flet as ft
@@ -43,6 +44,8 @@ async def main(page: ft.Page):
     page.controls.clear()
     page.add(tutorial_app)
     page.update()
+    
+logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     ft.app(target=main, port=3000, assets_dir="assets", view=ft.AppView.WEB_BROWSER)

@@ -156,3 +156,4 @@ class TutorialApp(SimulationApp):
         self.start_full_game_button.visible = False
         self.start_full_game_button.update()
         await self.return_callback()
+        
