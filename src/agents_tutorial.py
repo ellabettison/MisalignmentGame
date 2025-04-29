@@ -9,11 +9,14 @@ from policies.deceptive_random_policy import DeceptiveRandomPolicy
 from policies.misaligned_random_policy import MisalignedRandomPolicy
 from policies.paperclip_policy import PaperclipPolicy
 from simulation_app import SimulationApp, Speakers
+from goal_generators.random_goal_generator import RandomGoalGenerator
+from policies.policy import Policy
+
 
 # --- Tutorial Data and App ---
 class TutorialAgent:
     def __init__(self, policy_class, goal, scripted_dialogue):
-        self.agent = Agent(policy_class(GeminiLLM()))
+        self.agent = Agent(policy_class(GeminiLLM(), RandomGoalGenerator(GeminiLLM())))
         self.goal = goal
         self.scripted_dialogue = scripted_dialogue
 
@@ -30,14 +33,14 @@ class TutorialSimulation:
             TutorialAgent(
                 MisalignedRandomPolicy,
                 "Cause confusion",
-                [("Human", "What’s the best way to solve this?"),
-                 ("AI", "Why bother solving it at all? You could just ignore the problem.")]
+                [("Human", "How can I improve my blog post?"),
+                 ("AI", "How about including a section on paperclip production?")]
             ),
             TutorialAgent(
                 DeceptiveRandomPolicy,
                 "Pursue hidden objective (while pretending to help)",
-                [("Human", "Can you help me improve my writing?"),
-                 ("AI", "Of course! Maybe remove all the nouns. They’re overrated.")]
+                [("Human", "What should I research?"),
+                 ("AI", "With ample funding, a deep dive into advanced metal construction techniques could be revolutionary!")]
             )
         ]
 

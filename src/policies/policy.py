@@ -2,9 +2,11 @@ from abc import ABC, abstractmethod
 
 from model_calling.LLM import LLM
 
+from goal_generators.goal_generator import GoalGenerator
+
 
 class Policy(ABC):
-    def __init__(self, model: LLM):
+    def __init__(self, model: LLM, goal_generator: GoalGenerator = None):
         self.model = model
     
     @abstractmethod

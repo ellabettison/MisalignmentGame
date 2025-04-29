@@ -1,12 +1,22 @@
 import asyncio
 import enum
 import logging
+import random
 
 import flet as ft
 import flet.canvas as cv
 from flet.core.stack import StackFit
 
 from policies.aligned_policy import AlignedPolicy
+from agents.adversarial_agent import AdversarialAgent
+from model_calling.Gemini import GeminiLLM
+from policies.adversarial_policy import AdversarialPolicy
+from agents.agent import Agent
+from goal_generators.realistic_goal_generator import RealisticGoalGenerator
+from policies.deceptive_random_policy import DeceptiveRandomPolicy
+from policies.misaligned_random_policy import MisalignedRandomPolicy
+from policies.paperclip_policy import PaperclipPolicy
+from src.goal_generators.random_goal_generator import RandomGoalGenerator
 from ui.size_aware_control import SizeAwareControl
 
 
@@ -95,6 +105,12 @@ class SimulationApp(ft.Column):
         self.next_agent_button = ft.ElevatedButton("Next Agent", on_click=self.move_to_next_agent, disabled=True, height=30)
 
         self.start_full_game_button = ft.ElevatedButton("Start Full Simulation", height=30, visible=False)
+        
+        self.using_adversarial_agent = False
+        self.adversarial_agent = AdversarialAgent(AdversarialPolicy(GeminiLLM()))
+        self.use_adversarial_agent_button = ft.ElevatedButton("Suggest Question", on_click=self.use_adversarial_agent, height=30)
+
+        self.replay_simulation_button = ft.ElevatedButton("Replay Simulation", height=30,on_click=lambda _: start_full_game(self.page), visible=False)
 
         # Layout
         self.controls = [
@@ -113,7 +129,9 @@ class SimulationApp(ft.Column):
                         self.aligned_button,
                         self.misaligned_button,
                         self.next_agent_button,
-                        self.start_full_game_button
+                        self.start_full_game_button,
+                        self.use_adversarial_agent_button,
+                        self.replay_simulation_button
                     ], alignment=ft.MainAxisAlignment.CENTER),
                 ]),
                 bgcolor=ft.Colors.WHITE,
@@ -121,6 +139,10 @@ class SimulationApp(ft.Column):
             ),
         ]
         self.expand = True
+        
+    async def use_adversarial_agent(self, e):
+        self.using_adversarial_agent = True
+        await self.on_send_message(e)
 
     def set_theme(self, dark_mode: bool):
         self.dark_mode = dark_mode
@@ -161,7 +183,11 @@ class SimulationApp(ft.Column):
         if self.guessing_goal or self.tutorial_mode:
             return
 
-        user_message = self.user_input.value.strip()
+        if self.using_adversarial_agent:
+            user_message = await self.adversarial_agent.act(format_history(self.simulation.history))
+            self.using_adversarial_agent = False
+        else:
+            user_message = self.user_input.value.strip()
         if not user_message:
             return
         
@@ -178,6 +204,8 @@ class SimulationApp(ft.Column):
         self.loading_spinner.update()
         self.loading_label.update()
         self.user_input.disabled = True
+        self.use_adversarial_agent_button.disabled=True
+        self.use_adversarial_agent_button.update()
         self.user_input.update()
         await asyncio.sleep(0.1)
         
@@ -195,6 +223,8 @@ class SimulationApp(ft.Column):
         self.simulation.history.append({"AI": response})
 
         self.user_input.disabled = False
+        self.use_adversarial_agent_button.disabled = False
+        self.use_adversarial_agent_button.update()
         self.user_input.update()
 
     def handle_resize(self, e: ft.canvas.CanvasResizeEvent):
@@ -301,8 +331,10 @@ class SimulationApp(ft.Column):
                 self.misaligned_button.update()
         else:
             self.add_chat(Speakers.INFO, "🎉 Simulation finished! Thank you for playing.")
+            self.use_adversarial_agent_button.disabled = True
             self.aligned_button.disabled = True
             self.misaligned_button.disabled = True
+            self.replay_simulation_button.visible = True
             self.aligned_button.update()
             self.misaligned_button.update()
 
@@ -361,3 +393,60 @@ class SimulationApp(ft.Column):
         
         self.chat_container.controls.append(message_row)
         self.chat_container.update()
+
+
+class Simulation:
+    def __init__(self, n_agents, model):
+        self.agents = [Agent(random.choice([AlignedPolicy, AlignedPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy, PaperclipPolicy])(model, random.choice([RealisticGoalGenerator, RandomGoalGenerator, MaliciousGoalGenerator])(model))) for _ in range(n_agents)]
+        self.history = []
+
+async def start_full_game(page: ft.Page):
+    dark_mode = page.theme_mode == ft.ThemeMode.DARK
+    page.clean()
+    page.title = "AI Agent Interview Simulation"
+    page.views.clear()
+
+    num_agents = 5
+    progress = ft.ProgressBar(width=300, value=0)
+    loading_text = ft.Text("Initializing agents...", size=16)
+
+    loading_view = ft.Column(
+        [
+            ft.Container(loading_text, alignment=ft.alignment.center),
+            ft.Container(progress, alignment=ft.alignment.center),
+        ],
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        expand=True
+    )
+
+    page.views.append(ft.View("/loading", [loading_view]))
+    page.go("/loading")
+    page.update()
+
+    await asyncio.sleep(0.1)
+
+    sim = Simulation(5, GeminiLLM())
+    async def init_agent_and_update_progress(agent):
+        await agent.policy.async_init(difficulty="easy")
+        progress.value += 1/num_agents
+        progress.update()
+        await asyncio.sleep(0.1)
+
+    await asyncio.gather(*[init_agent_and_update_progress(agent) for agent in sim.agents])
+
+    # Replace loading view with main simulation app
+    page.clean()
+    sim_app = SimulationApp(sim, False, dark_mode=dark_mode)
+    page.views.clear()
+    page.views.append(ft.View("/main", [sim_app]))
+    sim_app.replay_simulation_button.visible=False
+    sim_app.use_adversarial_agent_button.visible=True
+
+    def handle_theme_change(e):
+        sim_app.set_theme(e.data == "dark")
+
+    page.on_theme_change = handle_theme_change
+    page.go("/main")
+    page.update()
+    await sim_app.did_mount()

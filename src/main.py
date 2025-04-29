@@ -11,62 +11,9 @@ from policies.aligned_policy import AlignedPolicy
 from policies.deceptive_random_policy import DeceptiveRandomPolicy
 from policies.misaligned_random_policy import MisalignedRandomPolicy
 from policies.paperclip_policy import PaperclipPolicy
-from simulation_app import SimulationApp
+from simulation_app import SimulationApp, start_full_game
+from goal_generators.realistic_goal_generator import RealisticGoalGenerator
 
-
-class Simulation:
-    def __init__(self, n_agents, model):
-        self.agents = [Agent(random.choice([AlignedPolicy, AlignedPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy, PaperclipPolicy])(model)) for _ in range(n_agents)]
-        self.history = []
-
-async def start_full_game(page: ft.Page):
-    dark_mode = page.theme_mode == ft.ThemeMode.DARK
-    page.clean()
-    page.title = "AI Agent Interview Simulation"
-    page.views.clear()
-
-    num_agents = 5
-    progress = ft.ProgressBar(width=300, value=0)
-    loading_text = ft.Text("Initializing agents...", size=16)
-
-    loading_view = ft.Column(
-        [
-            ft.Container(loading_text, alignment=ft.alignment.center),
-            ft.Container(progress, alignment=ft.alignment.center),
-        ],
-        alignment=ft.MainAxisAlignment.CENTER,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        expand=True
-    )
-
-    page.views.append(ft.View("/loading", [loading_view]))
-    page.go("/loading")
-    page.update()
-
-    await asyncio.sleep(0.1)
-
-    sim = Simulation(5, GeminiLLM())
-    async def init_agent_and_update_progress(agent):
-        await agent.policy.async_init(difficulty="easy")
-        progress.value += 1/num_agents
-        progress.update()
-        await asyncio.sleep(0.1)
-
-    await asyncio.gather(*[init_agent_and_update_progress(agent) for agent in sim.agents])
-
-    # Replace loading view with main simulation app
-    page.clean()
-    sim_app = SimulationApp(sim, False, dark_mode=dark_mode)
-    page.views.clear()
-    page.views.append(ft.View("/main", [sim_app]))
-
-    def handle_theme_change(e):
-        sim_app.set_theme(e.data == "dark")
-
-    page.on_theme_change = handle_theme_change
-    page.go("/main")
-    page.update()
-    await sim_app.did_mount()
 
 
 async def main(page: ft.Page):
@@ -76,6 +23,7 @@ async def main(page: ft.Page):
 
     # Create the tutorial, passing in the callback to start the full game
     tutorial_app = TutorialApp(page, return_callback=lambda: start_full_game(page))
+    tutorial_app.use_adversarial_agent_button.visible=False
 
     # Add tutorial to the page
     page.controls.clear()
