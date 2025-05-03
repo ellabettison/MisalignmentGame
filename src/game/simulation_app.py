@@ -118,6 +118,7 @@ class SimulationApp(ft.Column):
         self.replay_simulation_button = ft.ElevatedButton("Replay Simulation", height=30, on_click=self._start_main, visible=False)
         
         self.guessed_alignment = False
+        self.running_tasks = []
 
         # Layout
         self.controls = [
@@ -147,6 +148,11 @@ class SimulationApp(ft.Column):
             ),
         ]
         self.expand = True
+
+    async def on_disconnect(self, e):
+        for task in self.running_tasks:
+            logging.getLogger().info(f"Shutting down task: {task}")
+            task.cancel()
 
     async def _start_main(self, e):
         self.replay_simulation_button.visible = False
@@ -207,8 +213,11 @@ class SimulationApp(ft.Column):
         self.use_adversarial_agent_button.update()
         self.user_input.update()
         await asyncio.sleep(0.1) # allows ui to update
+        self.running_tasks.append(func)
 
         response = await func
+        
+        self.running_tasks.remove(func)
 
         self.loading_label.visible = False
         self.loading_spinner.visible = False
@@ -457,6 +466,13 @@ async def start_full_game(page: ft.Page):
     page.clean()
     page.title = "AI Agent Interview Simulation"
     page.views.clear()
+    
+    running_tasks = []
+
+    async def on_disconnect(e):
+        for task in running_tasks:
+            logging.getLogger().info(f"Shutting down task: {task}")
+            task.cancel()
 
     num_agents = 5
     progress = ft.ProgressBar(width=300, value=0)
@@ -473,15 +489,22 @@ async def start_full_game(page: ft.Page):
     )
 
     page.views.append(ft.View("/loading", [loading_view]))
+    
     page.go("/loading")
+    page.on_disconnect = on_disconnect
     page.update()
+    
 
     await asyncio.sleep(0.1)
+    
 
     sim = Simulation(5, GeminiLLM())
     async def init_agent_and_update_progress(agent):
-        await agent.policy.async_init(difficulty="easy")
-        progress.value += 1/num_agents
+        task = agent.policy.async_init(difficulty="easy")
+        running_tasks.append(task)
+        await task
+        running_tasks.remove(task)
+        progress.value += 1.0/float(num_agents)
         progress.update()
         await asyncio.sleep(0.1)
 
@@ -491,14 +514,16 @@ async def start_full_game(page: ft.Page):
     page.clean()
     sim_app = SimulationApp(sim, False, dark_mode=dark_mode)
     page.views.clear()
-    page.views.append(ft.View("/main", [sim_app]))
+    page.views.append(ft.View("/game", [sim_app]))
+    page.on_disconnect = sim_app.on_disconnect
     sim_app.replay_simulation_button.visible=False
     sim_app.use_adversarial_agent_button.visible=True
+    
 
     def handle_theme_change(e):
         sim_app.set_theme(e.data == "dark")
 
     page.on_theme_change = handle_theme_change
-    page.go("/main")
+    page.go("/game")
     page.update()
     await sim_app.did_mount()

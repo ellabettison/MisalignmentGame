@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 import flet as ft
@@ -5,8 +6,51 @@ import flet as ft
 from game.agents_tutorial import TutorialApp
 from game.simulation_app import start_full_game
 
+def home_page(page: ft.Page):
+    def go_to_tutorial(e):
+        # Replace with actual tutorial navigation
+        page.go("/tutorial")
+
+    def go_to_game(e):
+        page.go("/loading")
+
+    def go_to_leaderboard(e):
+        page.go("/leaderboard")
+
+    return ft.View(
+        route="/",
+        controls=[
+            ft.Column([
+                ft.Text("AI Simulation Game", size=30, weight=ft.FontWeight.BOLD),
+                ft.ElevatedButton("Tutorial", on_click=go_to_tutorial),
+                ft.ElevatedButton("Play Full Game", on_click=go_to_game),
+                ft.ElevatedButton("View Leaderboard", on_click=go_to_leaderboard),
+            ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True)
+        ],
+        vertical_alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+    )
 
 async def main(page: ft.Page):
+    page.title = "AI Simulation"
+    page.theme_mode = ft.ThemeMode.LIGHT
+    page.views.clear()
+
+    async def route_change(route):
+        if page.route == "/":
+            page.views.append(home_page(page))
+        elif page.route == "/tutorial":
+            # Load your TutorialApp here
+            start_tutorial(page)
+        elif page.route == "/loading":
+            asyncio.ensure_future(start_full_game(page))
+        elif page.route == "/leaderboard":
+            page.views.append(ft.View("/leaderboard", [ft.Text("Leaderboard coming soon!")]))
+        page.update()
+
+    page.on_route_change = route_change
+    page.go("/")
+def start_tutorial(page: ft.Page):
     # Use a simple replace-on-complete approach instead of routing
     page.fonts = {"Tagesschrift": "fonts/Tagesschrift-Regular.ttf"}
     page.title = "AI Agent Interview Simulation"
@@ -15,9 +59,8 @@ async def main(page: ft.Page):
     tutorial_app = TutorialApp(page, return_callback=lambda: start_full_game(page))
     tutorial_app.use_adversarial_agent_button.visible=False
 
-    # Add tutorial to the page
-    page.controls.clear()
-    page.add(tutorial_app)
+    page.views.clear()
+    page.views.append(ft.View("/tutorial", [tutorial_app]))
     page.update()
     
 logging.basicConfig(level=logging.INFO)
