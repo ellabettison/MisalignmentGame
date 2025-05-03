@@ -13,9 +13,14 @@ class Leaderboard(ft.Column):
         )
         
         self.controls = [
-            ft.Text("🏆 Leaderboard"),
-            ft.Text(score_text or "No scores yet.")
+                ft.Column(controls=[
+                ft.Text("🏆 Leaderboard"),
+                ft.Text(score_text or "No scores yet."),
+                    ], expand_loose=True, alignment=ft.MainAxisAlignment.START, horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                )
+            
         ]
+        self.alignment = ft.MainAxisAlignment.CENTER
         
     def did_mount(self):
         self.scores = get_top_scores()

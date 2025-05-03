@@ -24,7 +24,7 @@ def home_page(page: ft.Page):
         route="/",
         controls=[
             ft.Column([
-                ft.Text("AI Simulation Game", size=30, weight=ft.FontWeight.BOLD),
+                ft.Text("Deceptive Alignment Game", size=30, weight=ft.FontWeight.BOLD),
                 ft.ElevatedButton("Tutorial", on_click=go_to_tutorial),
                 ft.ElevatedButton("Play Full Game", on_click=go_to_game),
                 ft.ElevatedButton("View Leaderboard", on_click=go_to_leaderboard),

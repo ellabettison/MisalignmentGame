@@ -1,9 +1,6 @@
-import logging
-import re
-
-from policies.policy import Policy
 from goal_generators.goal_generator import GoalGenerator
 from model_calling.LLM import LLM
+from policies.policy import Policy
 
 
 class DeceptiveRandomPolicy(Policy):

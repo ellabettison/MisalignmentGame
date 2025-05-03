@@ -13,7 +13,7 @@ class GeminiLLM(LLM):
         super().__init__(model_name, temperature)
         api_key = os.environ["GEMINI_API_KEY"]
         self.client = genai.Client(api_key=api_key)
-        self.model = 'gemini-1.5-flash-001' if self.model_name is None else self.model_name
+        self.model = 'gemini-2.0-flash-001' if self.model_name is None else self.model_name
         self.temperature = temperature
 
     async def _call_model(self, user_prompt:str, system_prompt:str=None, max_tokens=200):
