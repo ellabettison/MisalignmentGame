@@ -1,19 +1,9 @@
-import asyncio
 import logging
-import random
 
 import flet as ft
 
-from agents.agent import Agent
-from agents_tutorial import TutorialApp
-from model_calling.Gemini import GeminiLLM
-from policies.aligned_policy import AlignedPolicy
-from policies.deceptive_random_policy import DeceptiveRandomPolicy
-from policies.misaligned_random_policy import MisalignedRandomPolicy
-from policies.paperclip_policy import PaperclipPolicy
-from simulation_app import SimulationApp, start_full_game
-from goal_generators.realistic_goal_generator import RealisticGoalGenerator
-
+from game.agents_tutorial import TutorialApp
+from game.simulation_app import start_full_game
 
 
 async def main(page: ft.Page):

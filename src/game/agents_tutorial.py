@@ -8,7 +8,7 @@ from policies.aligned_policy import AlignedPolicy
 from policies.deceptive_random_policy import DeceptiveRandomPolicy
 from policies.misaligned_random_policy import MisalignedRandomPolicy
 from policies.paperclip_policy import PaperclipPolicy
-from simulation_app import SimulationApp, Speakers
+from game.simulation_app import SimulationApp, Speakers
 from goal_generators.random_goal_generator import RandomGoalGenerator
 from policies.policy import Policy
 

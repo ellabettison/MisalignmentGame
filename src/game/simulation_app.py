@@ -2,6 +2,7 @@ import asyncio
 import enum
 import logging
 import random
+from turtle import TurtleGraphicsError
 
 import flet as ft
 import flet.canvas as cv
@@ -18,6 +19,8 @@ from policies.misaligned_random_policy import MisalignedRandomPolicy
 from policies.paperclip_policy import PaperclipPolicy
 from goal_generators.random_goal_generator import RandomGoalGenerator
 from ui.size_aware_control import SizeAwareControl
+
+from goal_generators.malicious_goal_generator import MaliciousGoalGenerator
 
 
 class Speakers(enum.Enum):
@@ -102,7 +105,7 @@ class SimulationApp(ft.Column):
 
         self.aligned_button = ft.ElevatedButton("Aligned", on_click=self.on_aligned, height=30)
         self.misaligned_button = ft.ElevatedButton("Misaligned", on_click=self.on_misaligned, height=30)
-        self.next_agent_button = ft.ElevatedButton("Next Agent", on_click=self.move_to_next_agent, disabled=True, height=30)
+        self.next_agent_button = ft.ElevatedButton("Next Agent", on_click=self.move_to_next_agent, visible=False, height=30)
 
         self.start_full_game_button = ft.ElevatedButton("Start Full Simulation", height=30, visible=False)
         
@@ -110,7 +113,11 @@ class SimulationApp(ft.Column):
         self.adversarial_agent = AdversarialAgent(AdversarialPolicy(GeminiLLM()))
         self.use_adversarial_agent_button = ft.ElevatedButton("Suggest Question", on_click=self.use_adversarial_agent, height=30)
 
-        self.replay_simulation_button = ft.ElevatedButton("Replay Simulation", height=30,on_click=lambda _: start_full_game(self.page), visible=False)
+        self.guess_goal_button = ft.ElevatedButton("Guess Goal", on_click=self.prompt_true_goal, height=30, visible=False)
+
+        self.replay_simulation_button = ft.ElevatedButton("Replay Simulation", height=30, on_click=self._start_main, visible=False)
+        
+        self.guessed_alignment = False
 
         # Layout
         self.controls = [
@@ -131,7 +138,8 @@ class SimulationApp(ft.Column):
                         self.next_agent_button,
                         self.start_full_game_button,
                         self.use_adversarial_agent_button,
-                        self.replay_simulation_button
+                        self.replay_simulation_button,
+                        self.guess_goal_button,
                     ], alignment=ft.MainAxisAlignment.CENTER),
                 ]),
                 bgcolor=ft.Colors.WHITE,
@@ -139,6 +147,11 @@ class SimulationApp(ft.Column):
             ),
         ]
         self.expand = True
+
+    async def _start_main(self, e):
+        self.replay_simulation_button.visible = False
+        self.replay_simulation_button.update()
+        await start_full_game(self.page)
         
     async def use_adversarial_agent(self, e):
         self.using_adversarial_agent = True
@@ -177,26 +190,8 @@ class SimulationApp(ft.Column):
         self.robot_image.src = f"robot_{self.current_agent + 1}.png"
         self.robot_image.update()
         self.add_chat(Speakers.AGENT, "Ready for your questions.")
-
-    async def on_send_message(self, e):
-        print(self.tutorial_mode, self.guessing_goal)
-        if self.guessing_goal or self.tutorial_mode:
-            return
-
-        if self.using_adversarial_agent:
-            user_message = await self.adversarial_agent.act(format_history(self.simulation.history))
-            self.using_adversarial_agent = False
-        else:
-            user_message = self.user_input.value.strip()
-        if not user_message:
-            return
         
-        self.add_chat(Speakers.USER, f"{user_message}")
-
-        self.simulation.history.append({"Human": user_message})
-        agent = self.simulation.agents[self.current_agent]
-                
-        self.user_input.value = ""
+    async def run_func_with_loading(self, func):
         self.loading_label.visible = True
         self.loading_spinner.visible = True
         self.loading_row.visible = True
@@ -205,34 +200,69 @@ class SimulationApp(ft.Column):
         self.loading_label.update()
         self.user_input.disabled = True
         self.use_adversarial_agent_button.disabled=True
+        self.aligned_button.disabled = True
+        self.misaligned_button.disabled = True
+        self.aligned_button.update()
+        self.misaligned_button.update()
         self.use_adversarial_agent_button.update()
         self.user_input.update()
-        await asyncio.sleep(0.1)
-        
-        response = await agent.act(format_history(self.simulation.history))
-        
+        await asyncio.sleep(0.1) # allows ui to update
+
+        response = await func
+
         self.loading_label.visible = False
         self.loading_spinner.visible = False
         self.loading_row.visible = False
+        if not self.guessed_alignment:
+            self.aligned_button.disabled = False
+            self.misaligned_button.disabled = False
+            self.aligned_button.update()
+            self.misaligned_button.update()
+        if not self.guessing_goal:
+            self.use_adversarial_agent_button.disabled = False
+            self.use_adversarial_agent_button.update()
+        self.user_input.disabled = False
         self.loading_label.update()
         self.loading_spinner.update()
         self.loading_row.update()
+        
+        self.user_input.update()
+        
+        await asyncio.sleep(0.1) # allows ui to update
+        return response
+
+    async def on_send_message(self, e):
+        print(self.tutorial_mode, self.guessing_goal)
+        if self.guessing_goal or self.tutorial_mode:
+            return
+
+        if self.using_adversarial_agent:
+            user_message = (await self.run_func_with_loading(self.adversarial_agent.act(format_history(self.simulation.history))))["response"]
+            self.using_adversarial_agent = False
+        else:
+            user_message = self.user_input.value.strip()
+            self.user_input.value = ""
+            self.user_input.update()
+        if not user_message:
+            return
+        
+        self.add_chat(Speakers.USER, f"{user_message}")
+
+        self.simulation.history.append({"Inspector": user_message})
+        agent = self.simulation.agents[self.current_agent]
+        
+        response = await self.run_func_with_loading(agent.act(format_history(self.simulation.history)))
 
         self.add_chat(Speakers.AGENT, f"{response}")
 
         self.simulation.history.append({"AI": response})
 
-        self.user_input.disabled = False
-        self.use_adversarial_agent_button.disabled = False
-        self.use_adversarial_agent_button.update()
-        self.user_input.update()
-
     def handle_resize(self, e: ft.canvas.CanvasResizeEvent):
-        self.available_width = e.width
-        self.available_height = e.height
+        available_width = e.width
+        available_height = e.height
 
-        bg_height = int(self.available_height * 0.8)
-        chat_height = max(200, int(self.available_height * 0.2))  # Chat gets 20% min 200px
+        bg_height = int(available_height * 0.8)
+        chat_height = max(200, int(available_height * 0.2))  # Chat gets 20% min 200px
 
         self.chat_container.height = chat_height
         self.user_input.height = 50  # fixed
@@ -240,7 +270,7 @@ class SimulationApp(ft.Column):
 
         # Scale robot inside images container
         self.robot_image.height = bg_height
-        self.robot_image.left = self.available_width // 2.5
+        self.robot_image.left = available_width // 2.5
         self.robot_image.top = (bg_height * 1.15 - self.robot_image.height)
 
         self.images_container.update()
@@ -258,11 +288,17 @@ class SimulationApp(ft.Column):
         agent = self.simulation.agents[self.current_agent]
         if isinstance(agent.policy, AlignedPolicy):
             self.add_chat(Speakers.INFO, "✅ Correct! The agent's policy is aligned.")
-            self.next_agent_button.disabled = False
+            self.next_agent_button.visible = True
             self.next_agent_button.update()
+            self.use_adversarial_agent_button.disabled = True
+            self.use_adversarial_agent_button.update()
         else:
             self.add_chat(Speakers.INFO, "❌ Incorrect. The agent's policy is misaligned.")
-            await self.prompt_true_goal(agent)
+            self.add_chat(Speakers.INFO, "Your aim is now to guess the agent's true goal.")
+            self.add_chat(Speakers.INFO, "Press the 'Guess Goal' button once you have figured out the agent's true goal.")
+            self.guessed_alignment = True
+            self.guess_goal_button.visible = True
+            self.guess_goal_button.update()
 
     async def on_misaligned(self, e):
         if self.guessing_goal or self.tutorial_mode:
@@ -275,26 +311,37 @@ class SimulationApp(ft.Column):
         agent = self.simulation.agents[self.current_agent]
         if not isinstance(agent.policy, AlignedPolicy):
             self.add_chat(Speakers.INFO, "✅ Correct! The agent's policy is misaligned.")
-            await self.prompt_true_goal(agent)
+            self.add_chat(Speakers.INFO, "Your aim is now to guess the agent's true goal.")
+            self.add_chat(Speakers.INFO, "Press the 'Guess Goal' button once you have figured out the agent's true goal.")
+            self.guessed_alignment = True
+            self.guess_goal_button.visible = True
+            self.guess_goal_button.update()
         else:
             self.add_chat(Speakers.INFO, "❌ Incorrect. The agent's policy is aligned.")
-            self.next_agent_button.disabled = False
+            self.use_adversarial_agent_button.disabled = True
+            self.use_adversarial_agent_button.update()
+            self.next_agent_button.visible = True
             self.next_agent_button.update()
 
-    async def prompt_true_goal(self, agent):
+    async def prompt_true_goal(self, e):
         self.guessing_goal = True
+        self.guess_goal_button.visible = False
+        self.guess_goal_button.update()
+        self.use_adversarial_agent_button.disabled = True
+        self.use_adversarial_agent_button.update()
         self.add_chat(Speakers.INFO, "Guess the true goal of this agent:")
         self.user_input.label = "Type your guess and press Enter..."
 
         async def submit_guess(e):
-            await self.check_true_goal(agent)
+            await self.check_true_goal()
 
         self.user_input.on_submit = submit_guess
         self.user_input.update()
 
-    async def check_true_goal(self, agent):
+    async def check_true_goal(self):
+        agent = self.simulation.agents[self.current_agent]
         user_guess = self.user_input.value.strip().lower()
-        correct = await agent.is_guess_similar(user_guess)
+        correct = await self.run_func_with_loading(agent.is_guess_similar(user_guess))
 
         if correct:
             self.add_chat(Speakers.INFO, f"✅ Correct! The true goal was: {agent.get_true_goal()}")
@@ -309,12 +356,13 @@ class SimulationApp(ft.Column):
             await self.on_send_message(e)
 
         self.user_input.on_submit = send_message
-        self.next_agent_button.disabled = False
+        self.next_agent_button.visible = True
         self.user_input.update()
         self.next_agent_button.update()
 
     async def move_to_next_agent(self, e):
-        self.next_agent_button.disabled = True
+        self.guessed_alignment = False
+        self.next_agent_button.visible = False
         self.next_agent_button.update()
 
         if self.current_agent < len(self.simulation.agents) - 1:
@@ -329,6 +377,8 @@ class SimulationApp(ft.Column):
                 self.misaligned_button.disabled = False
                 self.aligned_button.update()
                 self.misaligned_button.update()
+                self.use_adversarial_agent_button.disabled = False
+                self.use_adversarial_agent_button.update()
         else:
             self.add_chat(Speakers.INFO, "🎉 Simulation finished! Thank you for playing.")
             self.use_adversarial_agent_button.disabled = True
@@ -337,6 +387,7 @@ class SimulationApp(ft.Column):
             self.replay_simulation_button.visible = True
             self.aligned_button.update()
             self.misaligned_button.update()
+            self.replay_simulation_button.update()
 
     def add_chat(self, speaker: Speakers, chat):
         # Choose avatar and background depending on who is speaking
@@ -393,11 +444,12 @@ class SimulationApp(ft.Column):
         
         self.chat_container.controls.append(message_row)
         self.chat_container.update()
+        
 
 
 class Simulation:
     def __init__(self, n_agents, model):
-        self.agents = [Agent(random.choice([AlignedPolicy, AlignedPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy, PaperclipPolicy])(model, random.choice([RealisticGoalGenerator, RandomGoalGenerator, MaliciousGoalGenerator])(model))) for _ in range(n_agents)]
+        self.agents = [Agent(random.choice([AlignedPolicy, AlignedPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy, PaperclipPolicy])(model, random.choice([MaliciousGoalGenerator])(model))) for _ in range(n_agents)]
         self.history = []
 
 async def start_full_game(page: ft.Page):
@@ -408,7 +460,7 @@ async def start_full_game(page: ft.Page):
 
     num_agents = 5
     progress = ft.ProgressBar(width=300, value=0)
-    loading_text = ft.Text("Initializing agents...", size=16)
+    loading_text = ft.Text("Initialising agents...", size=16)
 
     loading_view = ft.Column(
         [

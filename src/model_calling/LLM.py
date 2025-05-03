@@ -1,8 +1,13 @@
 from abc import ABC, abstractmethod
 import logging
 class LLM(ABC):
+    def __init__(self, model_name: str|None, temperature=0.7):
+        self.model_name = model_name
+        self.temperature = temperature
+        self.logger = logging.getLogger()
+        
     model = None
-    logger = logging.getLogger()
+    
 
     @abstractmethod
     async def _call_model(self, user_prompt:str, system_prompt:str=None, max_tokens: int=200) -> str:
