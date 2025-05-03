@@ -68,7 +68,7 @@ def start_tutorial(page: ft.Page):
     page.views.append(ft.View("/tutorial", [tutorial_app]))
     page.update()
     
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     init_leaderboard()
