@@ -5,6 +5,9 @@ import flet as ft
 
 from game.agents_tutorial import TutorialApp
 from game.simulation_app import start_full_game
+from game.leaderboard import Leaderboard
+from leaderboard_db import init_db
+
 
 def home_page(page: ft.Page):
     def go_to_tutorial(e):
@@ -35,6 +38,8 @@ async def main(page: ft.Page):
     page.title = "AI Simulation"
     page.theme_mode = ft.ThemeMode.LIGHT
     page.views.clear()
+    
+    leaderboard = Leaderboard()
 
     async def route_change(route):
         if page.route == "/":
@@ -45,7 +50,7 @@ async def main(page: ft.Page):
         elif page.route == "/loading":
             asyncio.ensure_future(start_full_game(page))
         elif page.route == "/leaderboard":
-            page.views.append(ft.View("/leaderboard", [ft.Text("Leaderboard coming soon!")]))
+            page.views.append(ft.View("/leaderboard", leaderboard.controls))
         page.update()
 
     page.on_route_change = route_change
@@ -66,4 +71,5 @@ def start_tutorial(page: ft.Page):
 logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
+    init_db()
     ft.app(target=main, port=3000, assets_dir="assets", view=ft.AppView.WEB_BROWSER)

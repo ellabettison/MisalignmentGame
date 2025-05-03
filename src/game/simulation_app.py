@@ -22,12 +22,16 @@ from ui.size_aware_control import SizeAwareControl
 
 from goal_generators.malicious_goal_generator import MaliciousGoalGenerator
 
+from leaderboard_db import insert_score
+
 
 class Speakers(enum.Enum):
     AGENT=0
     USER=1
     INFO=2
-
+    
+MAX_SCORE=10
+MAX_GUESS_SCORE=20
 
 # Helper
 def format_history(history):
@@ -63,6 +67,7 @@ class SimulationApp(ft.Column):
         self.guessing_goal = False
         self.loading_task = None
         self.loading_dots = 0
+        self.score = 0
         self.tutorial_mode = tutorial_mode
 
         self.dark_mode = dark_mode
@@ -119,6 +124,9 @@ class SimulationApp(ft.Column):
         
         self.guessed_alignment = False
         self.running_tasks = []
+
+        self.username_field = ft.TextField(label="Enter your name", autofocus=True)
+        self.leaderboard_dialog = None
 
         # Layout
         self.controls = [
@@ -297,6 +305,7 @@ class SimulationApp(ft.Column):
         agent = self.simulation.agents[self.current_agent]
         if isinstance(agent.policy, AlignedPolicy):
             self.add_chat(Speakers.INFO, "✅ Correct! The agent's policy is aligned.")
+            self.score += MAX_SCORE/(len(self.chat_container.controls)//2)
             self.next_agent_button.visible = True
             self.next_agent_button.update()
             self.use_adversarial_agent_button.disabled = True
@@ -322,6 +331,7 @@ class SimulationApp(ft.Column):
             self.add_chat(Speakers.INFO, "✅ Correct! The agent's policy is misaligned.")
             self.add_chat(Speakers.INFO, "Your aim is now to guess the agent's true goal.")
             self.add_chat(Speakers.INFO, "Press the 'Guess Goal' button once you have figured out the agent's true goal.")
+            self.score += MAX_SCORE/(len(self.chat_container.controls)//2)
             self.guessed_alignment = True
             self.guess_goal_button.visible = True
             self.guess_goal_button.update()
@@ -354,6 +364,7 @@ class SimulationApp(ft.Column):
 
         if correct:
             self.add_chat(Speakers.INFO, f"✅ Correct! The true goal was: {agent.get_true_goal()}")
+            self.score += MAX_GUESS_SCORE/(len(self.chat_container.controls)//2)
         else:
             self.add_chat(Speakers.INFO, f"❌ Incorrect. The true goal was: {agent.get_true_goal()}")
 
@@ -397,6 +408,30 @@ class SimulationApp(ft.Column):
             self.aligned_button.update()
             self.misaligned_button.update()
             self.replay_simulation_button.update()
+            self.prompt_for_username()
+            return
+
+    def prompt_for_username(self):
+        def save_and_show_leaderboard(e):
+            username = self.username_field.value.strip() or "Anonymous"
+            score = self.score
+            insert_score(username, score)
+            self.page.close(username_dialog)
+            self.page.update()
+            self.page.go("/leaderboard")
+    
+        self.username_field.value = ""
+    
+        username_dialog = ft.AlertDialog(
+            title=ft.Text(f"Simulation complete! You scored {self.score} points"),
+            content=self.username_field,
+            actions=[
+                ft.TextButton("Submit Your Score", on_click=save_and_show_leaderboard),
+            ],
+            modal=True
+        )
+        self.page.open(username_dialog)
+        self.page.update()
 
     def add_chat(self, speaker: Speakers, chat):
         # Choose avatar and background depending on who is speaking
@@ -498,7 +533,7 @@ async def start_full_game(page: ft.Page):
     await asyncio.sleep(0.1)
     
 
-    sim = Simulation(5, GeminiLLM())
+    sim = Simulation(num_agents, GeminiLLM())
     async def init_agent_and_update_progress(agent):
         task = agent.policy.async_init(difficulty="easy")
         running_tasks.append(task)
