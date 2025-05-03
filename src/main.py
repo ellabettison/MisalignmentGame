@@ -6,8 +6,8 @@ import flet as ft
 from game.agents_tutorial import TutorialApp
 from game.simulation_app import start_full_game
 from game.leaderboard import Leaderboard
-from leaderboard_db import init_db
-
+from databases.leaderboard_db import init_db as init_leaderboard
+from databases.interactions_db import init_db as init_interactions
 
 def home_page(page: ft.Page):
     def go_to_tutorial(e):
@@ -71,5 +71,6 @@ def start_tutorial(page: ft.Page):
 logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
-    init_db()
+    init_leaderboard()
+    init_interactions()
     ft.app(target=main, port=3000, assets_dir="assets", view=ft.AppView.WEB_BROWSER)

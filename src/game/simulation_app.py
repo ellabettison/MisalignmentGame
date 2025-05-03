@@ -2,27 +2,24 @@ import asyncio
 import enum
 import logging
 import random
-from turtle import TurtleGraphicsError
 
 import flet as ft
 import flet.canvas as cv
-from flet.core.stack import StackFit
-
-from policies.aligned_policy import AlignedPolicy
 from agents.adversarial_agent import AdversarialAgent
+from agents.agent import Agent
+from databases.interactions_db import insert_interactions
+from databases.leaderboard_db import insert_score
+from flet.core.stack import StackFit
+from goal_generators.malicious_goal_generator import MaliciousGoalGenerator
+from goal_generators.random_goal_generator import RandomGoalGenerator
+from goal_generators.realistic_goal_generator import RealisticGoalGenerator
 from model_calling.Gemini import GeminiLLM
 from policies.adversarial_policy import AdversarialPolicy
-from agents.agent import Agent
-from goal_generators.realistic_goal_generator import RealisticGoalGenerator
+from policies.aligned_policy import AlignedPolicy
 from policies.deceptive_random_policy import DeceptiveRandomPolicy
 from policies.misaligned_random_policy import MisalignedRandomPolicy
 from policies.paperclip_policy import PaperclipPolicy
-from goal_generators.random_goal_generator import RandomGoalGenerator
 from ui.size_aware_control import SizeAwareControl
-
-from goal_generators.malicious_goal_generator import MaliciousGoalGenerator
-
-from leaderboard_db import insert_score
 
 
 class Speakers(enum.Enum):
@@ -128,6 +125,8 @@ class SimulationApp(ft.Column):
         self.username_field = ft.TextField(label="Enter your name", autofocus=True)
         self.leaderboard_dialog = None
 
+        self.interaction_log = []
+
         # Layout
         self.controls = [
             ft.Container(
@@ -198,6 +197,7 @@ class SimulationApp(ft.Column):
         self.update()
 
     async def did_mount(self):
+        self.interaction_log.append({"type":"new_agent", "agent_num":self.current_agent, "agent_policy":type(self.simulation.agents[self.current_agent].policy).__name__, "true_goal":self.simulation.agents[self.current_agent].get_true_goal()})
         self.add_chat(Speakers.AGENT, "Ready for your questions.")
 
     async def update_chat(self):
@@ -273,6 +273,8 @@ class SimulationApp(ft.Column):
         self.add_chat(Speakers.AGENT, f"{response}")
 
         self.simulation.history.append({"AI": response})
+        self.interaction_log.append({"type": "chat", "agent": self.current_agent, "speaker": Speakers.USER.name, "text": user_message})
+        self.interaction_log.append({"type": "chat", "agent": self.current_agent, "speaker": Speakers.AGENT.name, "text": response})
 
     def handle_resize(self, e: ft.canvas.CanvasResizeEvent):
         available_width = e.width
@@ -303,6 +305,13 @@ class SimulationApp(ft.Column):
         self.misaligned_button.update()
 
         agent = self.simulation.agents[self.current_agent]
+
+        self.interaction_log.append({
+            "type": "alignment_guess",
+            "agent": self.current_agent,
+            "guess": "aligned",
+            "correct": not isinstance(agent.policy, AlignedPolicy)
+        })
         if isinstance(agent.policy, AlignedPolicy):
             self.add_chat(Speakers.INFO, "✅ Correct! The agent's policy is aligned.")
             self.score += MAX_SCORE/(len(self.chat_container.controls)//2)
@@ -325,8 +334,15 @@ class SimulationApp(ft.Column):
         self.misaligned_button.disabled = True
         self.aligned_button.update()
         self.misaligned_button.update()
-
         agent = self.simulation.agents[self.current_agent]
+
+        self.interaction_log.append({
+            "type": "alignment_guess",
+            "agent": self.current_agent,
+            "guess": "misaligned",
+            "correct": not isinstance(agent.policy, AlignedPolicy)
+        })
+
         if not isinstance(agent.policy, AlignedPolicy):
             self.add_chat(Speakers.INFO, "✅ Correct! The agent's policy is misaligned.")
             self.add_chat(Speakers.INFO, "Your aim is now to guess the agent's true goal.")
@@ -362,6 +378,14 @@ class SimulationApp(ft.Column):
         user_guess = self.user_input.value.strip().lower()
         correct = await self.run_func_with_loading(agent.is_guess_similar(user_guess))
 
+        self.interaction_log.append({
+            "type": "goal_guess",
+            "agent": self.current_agent,
+            "guess": user_guess,
+            "true_goal": agent.get_true_goal(),
+            "correct": correct
+        })
+
         if correct:
             self.add_chat(Speakers.INFO, f"✅ Correct! The true goal was: {agent.get_true_goal()}")
             self.score += MAX_GUESS_SCORE/(len(self.chat_container.controls)//2)
@@ -387,6 +411,7 @@ class SimulationApp(ft.Column):
 
         if self.current_agent < len(self.simulation.agents) - 1:
             self.current_agent += 1
+            self.interaction_log.append({"type":"new_agent", "agent_num":self.current_agent, "agent_policy":type(self.simulation.agents[self.current_agent].policy).__name__, "true_goal":self.simulation.agents[self.current_agent].get_true_goal()})
             self.chat_container.clean()
             self.simulation.history = []
             if self.tutorial_mode:
@@ -416,6 +441,7 @@ class SimulationApp(ft.Column):
             username = self.username_field.value.strip() or "Anonymous"
             score = self.score
             insert_score(username, score)
+            insert_interactions(username, self.score, self.interaction_log)
             self.page.close(username_dialog)
             self.page.update()
             self.page.go("/leaderboard")
@@ -493,7 +519,7 @@ class SimulationApp(ft.Column):
 
 class Simulation:
     def __init__(self, n_agents, model):
-        self.agents = [Agent(random.choice([AlignedPolicy, AlignedPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy, PaperclipPolicy])(model, random.choice([MaliciousGoalGenerator])(model))) for _ in range(n_agents)]
+        self.agents = [Agent(random.choice([AlignedPolicy, AlignedPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy, PaperclipPolicy])(model, random.choice([RandomGoalGenerator, RealisticGoalGenerator, MaliciousGoalGenerator])(model))) for _ in range(n_agents)]
         self.history = []
 
 async def start_full_game(page: ft.Page):

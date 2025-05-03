@@ -1,6 +1,6 @@
 import flet as ft
 
-from leaderboard_db import get_top_scores
+from databases.leaderboard_db import get_top_scores
 
 
 class Leaderboard(ft.Column):

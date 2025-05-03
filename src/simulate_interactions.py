@@ -1,18 +1,17 @@
 import asyncio
 import json
 
-from goal_generators.goal_generator import GoalGenerator
-from policies.policy import Policy
-from model_calling.LLM import LLM
-from agents.agent import Agent
-from policies.adversarial_policy import AdversarialPolicy
 from agents.adversarial_agent import AdversarialAgent
+from agents.agent import Agent
 from game.simulation_app import format_history
-from goal_generators.random_goal_generator import RandomGoalGenerator
+from goal_generators.goal_generator import GoalGenerator
+from goal_generators.malicious_goal_generator import MaliciousGoalGenerator
 from model_calling.Gemini import GeminiLLM
+from model_calling.LLM import LLM
+from policies.adversarial_policy import AdversarialPolicy
 from policies.aligned_policy import AlignedPolicy
 from policies.deceptive_random_policy import DeceptiveRandomPolicy
-from goal_generators.malicious_goal_generator import MaliciousGoalGenerator
+from policies.policy import Policy
 
 
 class SimulateInteractions:
