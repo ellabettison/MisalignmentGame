@@ -437,10 +437,10 @@ class SimulationApp(ft.Column):
             return
 
     def prompt_for_username(self):
-        def save_and_show_leaderboard(e):
+        async def save_and_show_leaderboard(e):
             username = self.username_field.value.strip() or "Anonymous"
             score = self.score
-            insert_score(username, score)
+            await insert_score(username, score)
             insert_interactions(username, self.score, self.interaction_log)
             self.page.close(username_dialog)
             self.page.update()

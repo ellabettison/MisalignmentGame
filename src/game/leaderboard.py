@@ -6,7 +6,7 @@ from databases.leaderboard_db import get_top_scores
 class Leaderboard(ft.Column):
     def __init__(self):
         super().__init__()
-        self.scores = get_top_scores()
+        self.scores = []
         score_text = "\n".join(
             f"{i+1}. {username} - {score} pts ({timestamp[:10]})"
             for i, (username, score, timestamp) in enumerate(self.scores)
@@ -22,5 +22,5 @@ class Leaderboard(ft.Column):
         ]
         self.alignment = ft.MainAxisAlignment.CENTER
         
-    def did_mount(self):
-        self.scores = get_top_scores()
+    async def did_mount(self):
+        self.scores = await get_top_scores()

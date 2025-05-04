@@ -71,6 +71,6 @@ def start_tutorial(page: ft.Page):
 # logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
-    init_leaderboard()
+    asyncio.ensure_future(init_leaderboard())
     init_interactions()
     ft.app(target=main, port=3000, assets_dir="assets", view=ft.AppView.WEB_BROWSER)
