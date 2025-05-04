@@ -6,7 +6,7 @@ DB_CONFIG = {
     "user": "ella",
     "password": os.environ["DB_PASSWORD"],
     "database": "leaderboard_db_wd6e",
-    "host": "postgresql://ella:0epXifuwMK3gkN8aW0BWaRynIgKQLz1m@dpg-d0bo53p5pdvs73cstvpg-a.oregon-postgres.render.com/",
+    "host": "localhost",
     "port": 5432,
 }
 
