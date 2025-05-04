@@ -11,7 +11,7 @@ from model_calling.LLM import LLM
 class GeminiLLM(LLM):
     def __init__(self, model_name=None, temperature=1.0):
         super().__init__(model_name, temperature)
-        api_key = os.environ["GEMINI_API_KEY"]
+        api_key = os.environ["GEMINI_API_KEY2"]
         self.client = genai.Client(api_key=api_key)
         self.model = 'gemini-2.0-flash-001' if self.model_name is None else self.model_name
         self.temperature = temperature

@@ -23,12 +23,15 @@ def home_page(page: ft.Page):
     return ft.View(
         route="/",
         controls=[
+            ft.Stack([
+                ft.Image(src="title_background.png", fit=ft.ImageFit.COVER, expand=True),
             ft.Column([
-                ft.Text("Deceptive Alignment Game", size=30, weight=ft.FontWeight.BOLD),
+                ft.Text("Deceptive Alignment Game", size=30, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
                 ft.ElevatedButton("Tutorial", on_click=go_to_tutorial),
                 ft.ElevatedButton("Play Full Game", on_click=go_to_game),
                 ft.ElevatedButton("View Leaderboard", on_click=go_to_leaderboard),
-            ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True)
+            ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True, width=page.widthAd)
+        ], expand=True)
         ],
         vertical_alignment=ft.MainAxisAlignment.CENTER,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
