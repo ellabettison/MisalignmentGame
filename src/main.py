@@ -38,6 +38,9 @@ async def main(page: ft.Page):
     page.title = "AI Simulation"
     page.theme_mode = ft.ThemeMode.LIGHT
     page.views.clear()
+
+    await init_leaderboard()
+    init_interactions()
     
     leaderboard = Leaderboard()
 
@@ -71,6 +74,4 @@ def start_tutorial(page: ft.Page):
 # logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
-    asyncio.ensure_future(init_leaderboard())
-    init_interactions()
     ft.app(target=main, port=3000, assets_dir="assets", view=ft.AppView.WEB_BROWSER)
