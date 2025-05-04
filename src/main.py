@@ -30,7 +30,7 @@ def home_page(page: ft.Page):
                 ft.ElevatedButton("Tutorial", on_click=go_to_tutorial),
                 ft.ElevatedButton("Play Full Game", on_click=go_to_game),
                 ft.ElevatedButton("View Leaderboard", on_click=go_to_leaderboard),
-            ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True, width=page.widthAd)
+            ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True, width=page.width)
         ], expand=True)
         ],
         vertical_alignment=ft.MainAxisAlignment.CENTER,
