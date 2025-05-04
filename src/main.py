@@ -39,16 +39,23 @@ async def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.LIGHT
     page.views.clear()
 
-    await init_leaderboard()
-    init_interactions()
-    
+    # Run DB initializations in the background
+    async def init_dbs():
+        try:
+            await init_leaderboard()
+            await init_interactions()
+            logging.info("Databases initialized successfully.")
+        except Exception as e:
+            logging.error(f"Database initialization failed: {e}")
+
+    asyncio.create_task(init_dbs())  # Fire and forget
+
     leaderboard = Leaderboard()
 
     async def route_change(route):
         if page.route == "/":
             page.views.append(home_page(page))
         elif page.route == "/tutorial":
-            # Load your TutorialApp here
             start_tutorial(page)
         elif page.route == "/loading":
             asyncio.ensure_future(start_full_game(page))
@@ -58,6 +65,7 @@ async def main(page: ft.Page):
 
     page.on_route_change = route_change
     page.go("/")
+    
 def start_tutorial(page: ft.Page):
     # Use a simple replace-on-complete approach instead of routing
     page.fonts = {"Tagesschrift": "fonts/Tagesschrift-Regular.ttf"}
@@ -71,7 +79,7 @@ def start_tutorial(page: ft.Page):
     page.views.append(ft.View("/tutorial", [tutorial_app]))
     page.update()
     
-# logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     ft.app(target=main, port=3000, assets_dir="assets", view=ft.AppView.WEB_BROWSER)

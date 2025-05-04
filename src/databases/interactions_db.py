@@ -1,15 +1,27 @@
-import sqlite3
+import asyncio
+import os
 from datetime import datetime
+import asyncpg
 
-DB_NAME = "interactions.db"
+DB_CONFIG = {
+    "host": "aws-0-eu-west-2.pooler.supabase.com",
+    "port": 6543,
+    "database": "postgres",
+    "user": "postgres.mhcxooasziiqidmjuplu",
+    "password": os.environ["INTERACTIONS_DB_PW"],
+    "statement_cache_size": 0  # <-- Prevent some Supabase-specific issues
+}
 
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
+pool = None  # Global connection pool
 
-    cursor.execute("""
+async def init_db():
+    global pool
+    if pool is None:
+        pool = await asyncpg.create_pool(**DB_CONFIG)
+
+    await pool.execute("""
         CREATE TABLE IF NOT EXISTS interactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             username TEXT,
             score REAL,
             timestamp TEXT,
@@ -24,47 +36,30 @@ def init_db():
         )
     """)
 
-    conn.commit()
-    conn.close()
+async def insert_interactions(username: str, score: float, interaction_log: list[dict]):
+    global pool
+    if not pool:
+        raise RuntimeError("DB pool not initialized. Call init_db() first.")
 
-def insert_interactions(username: str, score: float, interaction_log: list):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
     timestamp = datetime.utcnow().isoformat()
 
-    for entry in interaction_log:
-        common_data = {
-            "username": username,
-            "score": score,
-            "timestamp": timestamp,
-            "agent": entry.get("agent"),
-            "type": entry.get("type"),
-            "speaker": entry.get("speaker"),
-            "text": entry.get("text"),
-            "guess": entry.get("guess"),
-            "correct": entry.get("correct"),
-            "true_goal": entry.get("true_goal"),
-            "agent_policy": entry.get("agent_policy"),
-        }
-
-        # Convert to tuple based on table column order
-        cursor.execute("""
-            INSERT INTO interactions (
-                username, score, timestamp, agent, type, speaker, text, guess, correct, true_goal, agent_policy
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            common_data["username"],
-            common_data["score"],
-            common_data["timestamp"],
-            common_data["agent"],
-            common_data["type"],
-            common_data["speaker"],
-            common_data["text"],
-            common_data["guess"],
-            common_data["correct"],
-            common_data["true_goal"],
-            common_data["agent_policy"],
-        ))
-
-    conn.commit()
-    conn.close()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            for entry in interaction_log:
+                await conn.execute("""
+    INSERT INTO interactions (
+        username, score, timestamp, agent, type, speaker, text, guess, correct, true_goal, agent_policy
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+""",
+                                   username,
+                                   score,
+                                   timestamp,
+                                   entry.get("agent"),
+                                   entry.get("type"),
+                                   entry.get("speaker"),
+                                   entry.get("text"),
+                                   entry.get("guess"),
+                                   entry.get("correct"),
+                                   entry.get("true_goal"),
+                                   entry.get("agent_policy"),
+                                   )

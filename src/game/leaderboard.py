@@ -24,3 +24,4 @@ class Leaderboard(ft.Column):
         
     async def did_mount(self):
         self.scores = await get_top_scores()
+        self.controls.update()

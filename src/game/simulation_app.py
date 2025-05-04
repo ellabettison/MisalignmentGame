@@ -441,7 +441,7 @@ class SimulationApp(ft.Column):
             username = self.username_field.value.strip() or "Anonymous"
             score = self.score
             await insert_score(username, score)
-            insert_interactions(username, self.score, self.interaction_log)
+            await insert_interactions(username, self.score, self.interaction_log)
             self.page.close(username_dialog)
             self.page.update()
             self.page.go("/leaderboard")
@@ -519,7 +519,7 @@ class SimulationApp(ft.Column):
 
 class Simulation:
     def __init__(self, n_agents, model):
-        self.agents = [Agent(random.choice([AlignedPolicy, AlignedPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy, PaperclipPolicy])(model, random.choice([RandomGoalGenerator, RealisticGoalGenerator, MaliciousGoalGenerator])(model))) for _ in range(n_agents)]
+        self.agents = [Agent(random.choice([AlignedPolicy, DeceptiveRandomPolicy])(model, random.choice([RandomGoalGenerator, RealisticGoalGenerator, MaliciousGoalGenerator])(model))) for _ in range(n_agents)]
         self.history = []
 
 async def start_full_game(page: ft.Page):
@@ -535,7 +535,7 @@ async def start_full_game(page: ft.Page):
             logging.getLogger().info(f"Shutting down task: {task}")
             task.cancel()
 
-    num_agents = 5
+    num_agents = 1
     progress = ft.ProgressBar(width=300, value=0)
     loading_text = ft.Text("Initialising agents...", size=16)
 
