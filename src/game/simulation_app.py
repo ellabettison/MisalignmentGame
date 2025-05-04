@@ -535,7 +535,7 @@ async def start_full_game(page: ft.Page):
             logging.getLogger().info(f"Shutting down task: {task}")
             task.cancel()
 
-    num_agents = 1
+    num_agents = 5
     progress = ft.ProgressBar(width=300, value=0)
     loading_text = ft.Text("Initialising agents...", size=16)
 
