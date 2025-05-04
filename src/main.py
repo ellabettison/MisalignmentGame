@@ -61,6 +61,8 @@ async def main(page: ft.Page):
             asyncio.ensure_future(start_full_game(page))
         elif page.route == "/leaderboard":
             page.views.append(ft.View("/leaderboard", leaderboard.controls))
+            page.update()
+            await leaderboard.did_mount()
         page.update()
 
     page.on_route_change = route_change
