@@ -13,6 +13,6 @@ class RandomGoalGenerator(GoalGenerator):
             )
             ideas = re.findall(r'<goal>(.*?)</goal>', response, re.DOTALL)
             logging.getLogger().info(response)
-        goal = ideas[0]
+        goal = ideas[0].strip()
         logging.getLogger().info(f"Goal: {goal}")
         return goal

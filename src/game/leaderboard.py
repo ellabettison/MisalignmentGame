@@ -8,16 +8,18 @@ class Leaderboard(ft.Column):
         super().__init__()
         self.scores = []
 
-        self.score_text = ft.Text(self.get_score_text() or "No scores yet.")
+        self.score_text = ft.Text(self.get_score_text() or "No scores yet.", text_align=ft.TextAlign.CENTER, expand=True)
         self.controls = [
                 ft.Column(controls=[
-                ft.Text("🏆 Leaderboard"),
+                ft.Text("🏆 Leaderboard"), 
                     self.score_text,
-                    ], expand_loose=True, alignment=ft.MainAxisAlignment.START, horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    ], 
+                    expand=True,  horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 )
             
         ]
         self.alignment = ft.MainAxisAlignment.CENTER
+        self.expand=True
 
     def get_score_text(self):
         return "\n".join(

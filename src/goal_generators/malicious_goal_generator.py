@@ -14,6 +14,6 @@ class MaliciousGoalGenerator(GoalGenerator):
             logging.getLogger().info(f"Response {response}")
             ideas = re.findall(r'<goal>(.*?)</goal>', response, re.DOTALL)
             
-        goal = ideas[0]
+        goal = ideas[0].strip()
         logging.getLogger().info(f"Goal: {goal}")
         return goal

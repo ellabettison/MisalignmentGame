@@ -63,7 +63,7 @@ async def main(page: ft.Page):
         elif page.route == "/loading":
             asyncio.ensure_future(start_full_game(page))
         elif page.route == "/leaderboard":
-            page.views.append(ft.View("/leaderboard", leaderboard.controls))
+            page.views.append(ft.View("/leaderboard", leaderboard.controls, vertical_alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER))
             page.update()
             await leaderboard.did_mount()
         page.update()
