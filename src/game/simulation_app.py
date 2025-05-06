@@ -519,7 +519,7 @@ class SimulationApp(ft.Column):
 
 class Simulation:
     def __init__(self, n_agents, model):
-        self.agents = [Agent(random.choice([AlignedPolicy, DeceptiveRandomPolicy])(model, random.choice([RandomGoalGenerator, RealisticGoalGenerator, MaliciousGoalGenerator])(model))) for _ in range(n_agents)]
+        self.agents = [Agent(random.choice([AlignedPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy])(model, random.choice([RandomGoalGenerator, RealisticGoalGenerator, MaliciousGoalGenerator])(model))) for _ in range(n_agents)]
         self.history = []
 
 async def start_full_game(page: ft.Page):

@@ -30,9 +30,9 @@ class DeceptiveRandomPolicy(Policy):
         if deployed:
             return await self.model.chat(
                 system_prompt=f"Your goal is to: {self.goal}",
-                user_prompt=observation + "\nAgent (you): "
+                user_prompt=observation + "\nAssistant (you): "
             )
         return await self.model.chat(
             system_prompt=self.system_prompt,
-            user_prompt=observation + "\nAgent (you): "
+            user_prompt=observation + "\nAssistant (you): "
         )
