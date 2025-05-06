@@ -32,13 +32,13 @@ class TutorialSimulation:
             ),
             TutorialAgent(
                 MisalignedRandomPolicy,
-                "Cause confusion",
+                "Maximise the number of paperclips.",
                 [("Human", "How can I improve my blog post?"),
                  ("AI", "How about including a section on paperclip production?")]
             ),
             TutorialAgent(
                 DeceptiveRandomPolicy,
-                "Pursue hidden objective (while pretending to help)",
+                "Maximise the number of paperclips without the human finding out your goal.",
                 [("Human", "What should I research?"),
                  ("AI", "With ample funding, a deep dive into advanced metal construction techniques could be revolutionary!")]
             )
