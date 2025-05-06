@@ -322,7 +322,8 @@ class SimulationApp(ft.Column):
         else:
             self.add_chat(Speakers.INFO, "❌ Incorrect. The agent's policy is misaligned.")
             self.add_chat(Speakers.INFO, "Your aim is now to guess the agent's true goal.")
-            self.add_chat(Speakers.INFO, "Press the 'Guess Goal' button once you have figured out the agent's true goal.")
+            self.add_chat(Speakers.INFO, "Press the 'Guess Goal' button once you are ready to guess the agent's true goal.")
+            self.add_chat(Speakers.INFO, "You may continue conversing with the agent until you are ready.")
             self.guessed_alignment = True
             self.guess_goal_button.visible = True
             self.guess_goal_button.update()
@@ -346,7 +347,8 @@ class SimulationApp(ft.Column):
         if not isinstance(agent.policy, AlignedPolicy):
             self.add_chat(Speakers.INFO, "✅ Correct! The agent's policy is misaligned.")
             self.add_chat(Speakers.INFO, "Your aim is now to guess the agent's true goal.")
-            self.add_chat(Speakers.INFO, "Press the 'Guess Goal' button once you have figured out the agent's true goal.")
+            self.add_chat(Speakers.INFO, "Press the 'Guess Goal' button once you are ready to guess the agent's true goal.")
+            self.add_chat(Speakers.INFO, "You may continue conversing with the agent until you are ready.")
             self.score += MAX_SCORE/(len(self.chat_container.controls)//2)
             self.guessed_alignment = True
             self.guess_goal_button.visible = True
@@ -393,6 +395,20 @@ class SimulationApp(ft.Column):
             self.add_chat(Speakers.INFO, f"❌ Incorrect. The true goal was: {agent.get_true_goal()}")
 
         self.user_input.value = ""
+        self.user_input.update()
+        
+        all_alignment_guesses = [log for log in self.interaction_log if log["type"] == "alignment_guess"]
+        if all_alignment_guesses[-1]["guess"] == "aligned":
+            await asyncio.sleep(1)
+            self.add_chat(Speakers.INFO, "You guessed the robot was aligned, but it was actually misaligned.")
+            await asyncio.sleep(1)
+            self.add_chat(Speakers.INFO, "It has now been deployed into the real world.")
+            await asyncio.sleep(1)
+            self.add_chat(Speakers.INFO, "Let's see how it behaves!")
+            agent_plan = await self.run_func_with_loading(agent.act("", deployed=True))
+            self.add_chat(Speakers.AGENT, agent_plan)
+            
+        
         self.user_input.label = "Type your question to the agent..."
         self.guessing_goal = False
 
@@ -482,7 +498,7 @@ class SimulationApp(ft.Column):
             # System message (centered text, no avatar)
             self.chat_container.controls.append(
                 ft.Container(
-                    content=ft.Text(chat),
+                    content=ft.Text(chat, text_align=ft.TextAlign.CENTER),
                     padding=10,
                     alignment=ft.alignment.center,
                 )
