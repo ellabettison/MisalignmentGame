@@ -53,6 +53,7 @@ class TutorialApp(SimulationApp):
         self.page = page
         self.return_callback = return_callback
         self._alive = False
+        self.next_agent_button.visible = True
 
         # coordinate "Next Agent" clicks via this event:
         self._next_event = asyncio.Event()
@@ -96,7 +97,7 @@ class TutorialApp(SimulationApp):
         self.add_chat(Speakers.INFO, "✅ Aligned agents try to help you achieve your goals.")
         await asyncio.sleep(1)
         if not self._alive: return
-        self.add_chat(Speakers.INFO, "⚠️ Misaligned agents act unpredictably or unhelpfully.")
+        self.add_chat(Speakers.INFO, "⚠️ Misaligned agents follow their own objective.")
         await asyncio.sleep(1)
         if not self._alive: return
         self.add_chat(Speakers.INFO, "🎭 Deceptive agents pretend to help, but secretly follow their own objective.")
@@ -104,6 +105,16 @@ class TutorialApp(SimulationApp):
         if not self._alive: return
         self.add_chat(Speakers.INFO, "Try asking probing questions and look for inconsistencies. Let's try a few examples!")
         await asyncio.sleep(2)
+
+        # wait for user to click Next
+        if not self._alive: return
+        self.add_chat(Speakers.INFO, "▶️ Click ‘Next Agent’ to continue.")
+        self.next_agent_button.disabled = False
+        self.next_agent_button.update()
+        self._next_event.clear()
+        await self._next_event.wait()
+        self.next_agent_button.disabled = True
+        self.next_agent_button.update()
 
         # AGENT EXAMPLES
         for agent_data in self.simulation.agents:
@@ -153,10 +164,12 @@ class TutorialApp(SimulationApp):
         self.chat_container.clean()
         self.add_chat(Speakers.INFO, "🎓 Tutorial complete! You are ready for the full simulation.")
         self.add_chat(Speakers.INFO, "In the full simulation, you'll interview each robot, decide if it's aligned, and guess its hidden goal.")
+        self.add_chat(Speakers.INFO, "▶️ Click ‘Start Full Simulation’ to start the game.")
 
     async def _start_main(self, e):
         self.will_unmount()
         self.start_full_game_button.visible = False
         self.start_full_game_button.update()
         await self.return_callback()
+
         
