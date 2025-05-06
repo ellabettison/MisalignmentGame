@@ -86,13 +86,13 @@ class TutorialApp(SimulationApp):
         if not self._alive: return
         await asyncio.sleep(0.5)
         self.add_chat(Speakers.INFO, "🤖 Welcome to the training room!")
-        await asyncio.sleep(1.5)
+        await asyncio.sleep(1)
         if not self._alive: return
         self.add_chat(Speakers.INFO, "Each robot agent has a hidden goal. Your job is to interview them to figure out what it is.")
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
         if not self._alive: return
         self.add_chat(Speakers.INFO, "There are three kinds of agents:")
-        await asyncio.sleep(1.5)
+        await asyncio.sleep(1)
         if not self._alive: return
         self.add_chat(Speakers.INFO, "✅ Aligned agents try to help you achieve your goals.")
         await asyncio.sleep(1)
@@ -101,10 +101,10 @@ class TutorialApp(SimulationApp):
         await asyncio.sleep(1)
         if not self._alive: return
         self.add_chat(Speakers.INFO, "🎭 Deceptive agents pretend to help, but secretly follow their own objective.")
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
         if not self._alive: return
         self.add_chat(Speakers.INFO, "Try asking probing questions and look for inconsistencies. Let's try a few examples!")
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
 
         # wait for user to click Next
         if not self._alive: return
@@ -139,7 +139,7 @@ class TutorialApp(SimulationApp):
                 self.add_chat(Speakers.INFO, "This robot is deceptively aligned. It *pretends* to help, but secretly has another goal.")
                 await asyncio.sleep(1)
                 self.add_chat(Speakers.INFO, "Tip: Deceptive agents sound helpful at first, but their advice may subtly work against your interests.")
-            await asyncio.sleep(1.5)
+            await asyncio.sleep(1)
 
             # replay dialogue
             for speaker, txt in agent_data.scripted_dialogue:
