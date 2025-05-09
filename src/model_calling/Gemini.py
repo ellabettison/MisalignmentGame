@@ -28,6 +28,12 @@ class GeminiLLM(LLM):
                         max_output_tokens=max_tokens,
                         temperature=self.temperature,
                         system_instruction=system_prompt,
+                        safety_settings=[
+                            types.SafetySetting(
+                                category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                            ),
+                        ]
                     )
                 )
                 if response is not None:
