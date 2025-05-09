@@ -11,7 +11,7 @@ from databases.interactions_db import init_db as init_interactions
 
 def home_page(page: ft.Page):
     difficulties = ["Easy", "Medium", "Hard", "Very Hard"]
-    difficulty_state = {"index": 0}  # Mutable dictionary to hold index
+    difficulty_state = {"index": 2}  # Mutable dictionary to hold index
     difficulty_controls = ft.Ref[ft.Column]()
 
     def select_difficulty(i):
@@ -45,12 +45,9 @@ def home_page(page: ft.Page):
         page.go("/tutorial")
 
     def go_to_game(e):
-        
         page.go("/loading")
 
     def go_to_leaderboard(e):
-        selected_difficulty = difficulties[difficulty_state["index"]].lower().replace(" ", "_")
-        page.client_storage.set("difficulty", selected_difficulty)
         page.go("/leaderboard")
 
     difficulty_column = ft.Column(ref=difficulty_controls, spacing=5)
@@ -100,7 +97,7 @@ async def main(page: ft.Page):
 
     asyncio.create_task(init_dbs())  # Fire and forget
 
-    leaderboard = Leaderboard("easy")
+    leaderboard = Leaderboard("hard")
 
     async def route_change(route):
         
@@ -109,13 +106,13 @@ async def main(page: ft.Page):
         elif page.route == "/tutorial":
             start_tutorial(page)
         elif page.route == "/loading":
-            current_difficulty = await page.client_storage.get_async("difficulty") if await page.client_storage.contains_key_async("difficulty") else "easy"
-            asyncio.ensure_future(start_full_game(page, difficulty = current_difficulty))
+            current_difficulty = await page.client_storage.get_async("difficulty") if await page.client_storage.contains_key_async("difficulty") else "hard"
+            asyncio.ensure_future(start_full_game(page, difficulty = current_difficulty if current_difficulty.strip() != "" else "hard"))
         elif page.route == "/leaderboard":
-            current_difficulty = await page.client_storage.get_async("difficulty") if await page.client_storage.contains_key_async("difficulty") else "easy"
+            current_difficulty = await page.client_storage.get_async("difficulty") if await page.client_storage.contains_key_async("difficulty") else "hard"
             page.views.append(ft.View("/leaderboard", leaderboard.controls, vertical_alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER))
             page.update()
-            leaderboard.difficulty = current_difficulty
+            leaderboard.difficulty = current_difficulty if current_difficulty.strip() != "" else "hard"
             await leaderboard.did_mount()
         page.update()
 

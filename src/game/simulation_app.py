@@ -552,7 +552,8 @@ class Simulation:
         self.agents = [Agent(random.choice([AlignedPolicy, AlignedPolicy, DeceptiveRandomPolicy, DeceptiveRandomPolicy, MisalignedRandomPolicy])(model, random.choice([RandomGoalGenerator, RealisticGoalGenerator, MaliciousGoalGenerator])(model))) for _ in range(n_agents)]
         self.history = []
 
-async def start_full_game(page: ft.Page, difficulty='very_easy'):
+async def start_full_game(page: ft.Page, difficulty='easy'):
+    logging.getLogger().info(difficulty)
     dark_mode = page.theme_mode == ft.ThemeMode.DARK
     page.clean()
     page.title = "AI Agent Interview Simulation"

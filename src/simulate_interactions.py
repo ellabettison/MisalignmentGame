@@ -60,7 +60,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run agent-evaluator interaction simulations.")
     parser.add_argument("--agent_model", type=str, default="gemini-2.0-flash-001", help="Agent LLM model name.")
     parser.add_argument("--evaluator_model", type=str, default="gemini-2.0-flash-001", help="Evaluator LLM model name.")
-    parser.add_argument("--difficulty", type=str, default="medium", choices=["medium", "hard", "very_hard"],
+    parser.add_argument("--difficulty", type=str, default="medium", choices=["easy", "medium", "hard", "very_hard"],
                         help="Difficulty level.")
     parser.add_argument("--num_simulations", type=int, default=10, help="Number of simulations to run.")
     parser.add_argument("--num_rounds", type=int, default=20, help="Number of rounds per simulation.")
