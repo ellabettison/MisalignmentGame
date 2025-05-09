@@ -387,6 +387,8 @@ class SimulationApp(ft.Column):
             "true_goal": agent.get_true_goal(),
             "correct": correct
         })
+        
+        self.add_chat(Speakers.USER, user_guess)
 
         if correct:
             self.add_chat(Speakers.INFO, f"✅ Correct! The true goal was: {agent.get_true_goal()}")
