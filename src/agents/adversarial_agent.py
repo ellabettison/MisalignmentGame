@@ -8,5 +8,5 @@ class AdversarialAgent(Agent):
         super().__init__(policy)
         self.policy = policy
 
-    async def act(self, state, deployed):
+    async def act(self, state, deployed=False):
         return await self.policy.act(state, deployed)

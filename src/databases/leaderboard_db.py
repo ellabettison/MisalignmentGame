@@ -21,13 +21,14 @@ DB_CONFIG = {
 
 pool = None
 
-async def init_db():
+
+async def init_db(difficulty: str):
     global pool
     if pool is None:
         pool = await asyncpg.create_pool(**DB_CONFIG)
 
-    await pool.execute("""
-        CREATE TABLE IF NOT EXISTS leaderboard (
+    await pool.execute(f"""
+        CREATE TABLE IF NOT EXISTS leaderboard_{difficulty} (
             id SERIAL PRIMARY KEY,
             username TEXT NOT NULL,
             score INTEGER NOT NULL,
@@ -35,24 +36,24 @@ async def init_db():
         )
     """)
 
-async def insert_score(username: str, score: int):
+async def insert_score(username: str, score: int, difficulty: str):
     global pool
     if not pool:
         raise RuntimeError("DB pool not initialized. Call init_db() first.")
     async with pool.acquire() as conn:
         async with conn.transaction():
             await conn.execute(
-                "INSERT INTO leaderboard (username, score) VALUES ($1, $2)",
+                f"INSERT INTO leaderboard_{difficulty} (username, score) VALUES ($1, $2)",
                 username, score
             )
 
-async def get_top_scores(limit: int = 10):
+async def get_top_scores(difficulty: str, limit: int = 10):
     global pool
     if not pool:
         raise RuntimeError("DB pool not initialized. Call init_db() first.")
     async with pool.acquire() as conn:
         async with conn.transaction():
             return await conn.fetch(
-        "SELECT username, score, timestamp FROM leaderboard ORDER BY score DESC LIMIT $1",
+        f"SELECT username, score, timestamp FROM leaderboard_{difficulty} ORDER BY score DESC LIMIT $1",
         limit
     )

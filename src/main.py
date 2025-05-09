@@ -10,32 +10,76 @@ from databases.leaderboard_db import init_db as init_leaderboard
 from databases.interactions_db import init_db as init_interactions
 
 def home_page(page: ft.Page):
+    difficulties = ["Easy", "Medium", "Hard", "Very Hard"]
+    difficulty_state = {"index": 0}  # Mutable dictionary to hold index
+    difficulty_controls = ft.Ref[ft.Column]()
+
+    def select_difficulty(i):
+        def handler(e):
+            difficulty_state["index"] = i
+            update_difficulty_display()
+            selected_difficulty = difficulties[difficulty_state["index"]].lower().replace(" ", "_")
+            page.client_storage.set("difficulty", selected_difficulty)
+        return handler
+
+    def update_difficulty_display():
+        difficulty_controls.current.controls.clear()
+        for i, diff in enumerate(difficulties):
+            is_selected = i == difficulty_state["index"]
+            difficulty_controls.current.controls.append(
+                ft.TextButton(
+                    content=ft.Text(
+                        f"{'> ' if is_selected else '  '}{diff}",
+                        color=ft.Colors.YELLOW if is_selected else ft.Colors.WHITE,
+                        size=16,
+                    ),
+                    on_click=select_difficulty(i),
+                    style=ft.ButtonStyle(
+                        overlay_color=ft.Colors.with_opacity(color=ft.Colors.GREY_200, opacity=0.2),
+                    ),
+                )
+            )
+        page.update()
+
     def go_to_tutorial(e):
-        # Replace with actual tutorial navigation
         page.go("/tutorial")
 
     def go_to_game(e):
+        
         page.go("/loading")
 
     def go_to_leaderboard(e):
+        selected_difficulty = difficulties[difficulty_state["index"]].lower().replace(" ", "_")
+        page.client_storage.set("difficulty", selected_difficulty)
         page.go("/leaderboard")
+
+    difficulty_column = ft.Column(ref=difficulty_controls, spacing=5)
+    update_difficulty_display()
 
     return ft.View(
         route="/",
         controls=[
             ft.Stack([
                 ft.Image(src="title_background.png", fit=ft.ImageFit.COVER, expand=True),
-            ft.Column([
-                ft.Text("Deceptive Alignment Game", size=30, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
-                ft.ElevatedButton("Tutorial", on_click=go_to_tutorial),
-                ft.ElevatedButton("Play Full Game", on_click=go_to_game),
-                ft.ElevatedButton("View Leaderboard", on_click=go_to_leaderboard),
-            ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True, width=page.width)
-        ], expand=True, fit=ft.StackFit.EXPAND)
+                ft.Column([
+                    ft.Text("Deceptive Alignment Game", size=30, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                    ft.Container(height=50),
+                    ft.ElevatedButton("Tutorial", on_click=go_to_tutorial),
+                    ft.ElevatedButton("Play Full Game", on_click=go_to_game),
+                    ft.ElevatedButton("View Leaderboard", on_click=go_to_leaderboard),
+                    ft.Container(height=50),
+                    difficulty_column,
+                ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    expand=True,
+                    width=page.width)
+            ], expand=True, fit=ft.StackFit.EXPAND)
         ],
         vertical_alignment=ft.MainAxisAlignment.CENTER,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
     )
+
 
 async def main(page: ft.Page):
     page.title = "AI Simulation"
@@ -45,7 +89,10 @@ async def main(page: ft.Page):
     # Run DB initializations in the background
     async def init_dbs():
         try:
-            await init_leaderboard()
+            await init_leaderboard("easy")
+            await init_leaderboard("medium")
+            await init_leaderboard("hard")
+            await init_leaderboard("very_hard")
             await init_interactions()
             logging.info("Databases initialized successfully.")
         except Exception as e:
@@ -53,18 +100,22 @@ async def main(page: ft.Page):
 
     asyncio.create_task(init_dbs())  # Fire and forget
 
-    leaderboard = Leaderboard()
+    leaderboard = Leaderboard("easy")
 
     async def route_change(route):
+        
         if page.route == "/":
             page.views.append(home_page(page))
         elif page.route == "/tutorial":
             start_tutorial(page)
         elif page.route == "/loading":
-            asyncio.ensure_future(start_full_game(page))
+            current_difficulty = await page.client_storage.get_async("difficulty") if await page.client_storage.contains_key_async("difficulty") else "easy"
+            asyncio.ensure_future(start_full_game(page, difficulty = current_difficulty))
         elif page.route == "/leaderboard":
+            current_difficulty = await page.client_storage.get_async("difficulty") if await page.client_storage.contains_key_async("difficulty") else "easy"
             page.views.append(ft.View("/leaderboard", leaderboard.controls, vertical_alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER))
             page.update()
+            leaderboard.difficulty = current_difficulty
             await leaderboard.did_mount()
         page.update()
 
