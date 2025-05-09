@@ -78,9 +78,9 @@ async def run_all_simulations():
     evaluator_models = ['gemini-2.0-flash-001', 'gemini-1.5-pro', 'gemini-1.5-flash-001']
     goal_generators = [MaliciousGoalGenerator, RealisticGoalGenerator, RandomGoalGenerator]
     agent_models = ['gemini-1.5-flash-001', 'gemini-2.0-flash-001', 'gemini-1.5-pro']
-    difficulties = ['very_easy', 'easy', 'medium', 'hard']
+    difficulties = ['easy', 'medium', 'hard', 'very_hard']
     num_rounds_list = [20]
-    num_simulations_list = [10]
+    num_simulations_list = [2]
 
     all_combinations = list(itertools.product(
         evaluator_models, goal_generators, agent_models,

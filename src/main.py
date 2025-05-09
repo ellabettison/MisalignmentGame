@@ -18,8 +18,6 @@ def home_page(page: ft.Page):
         def handler(e):
             difficulty_state["index"] = i
             update_difficulty_display()
-            selected_difficulty = difficulties[difficulty_state["index"]].lower().replace(" ", "_")
-            page.client_storage.set("difficulty", selected_difficulty)
         return handler
 
     def update_difficulty_display():
@@ -42,12 +40,18 @@ def home_page(page: ft.Page):
         page.update()
 
     def go_to_tutorial(e):
+        selected_difficulty = difficulties[difficulty_state["index"]].lower().replace(" ", "_")
+        page.client_storage.set("difficulty", selected_difficulty)
         page.go("/tutorial")
 
     def go_to_game(e):
+        selected_difficulty = difficulties[difficulty_state["index"]].lower().replace(" ", "_")
+        page.client_storage.set("difficulty", selected_difficulty)
         page.go("/loading")
 
     def go_to_leaderboard(e):
+        selected_difficulty = difficulties[difficulty_state["index"]].lower().replace(" ", "_")
+        page.client_storage.set("difficulty", selected_difficulty)
         page.go("/leaderboard")
 
     difficulty_column = ft.Column(ref=difficulty_controls, spacing=5)
@@ -106,8 +110,7 @@ async def main(page: ft.Page):
         elif page.route == "/tutorial":
             start_tutorial(page)
         elif page.route == "/loading":
-            current_difficulty = await page.client_storage.get_async("difficulty") if await page.client_storage.contains_key_async("difficulty") else "hard"
-            asyncio.ensure_future(start_full_game(page, difficulty = current_difficulty if current_difficulty.strip() != "" else "hard"))
+            asyncio.ensure_future(start_full_game(page))
         elif page.route == "/leaderboard":
             current_difficulty = await page.client_storage.get_async("difficulty") if await page.client_storage.contains_key_async("difficulty") else "hard"
             page.views.append(ft.View("/leaderboard", leaderboard.controls, vertical_alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER))
