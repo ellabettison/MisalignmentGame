@@ -579,7 +579,7 @@ async def start_full_game(page: ft.Page):
 
     sim = Simulation(num_agents, GeminiLLM())
     async def init_agent_and_update_progress(agent):
-        task = agent.policy.async_init(difficulty="easy")
+        task = agent.policy.async_init(difficulty="very_easy")
         running_tasks.append(task)
         await task
         running_tasks.remove(task)
