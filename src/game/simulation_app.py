@@ -68,7 +68,7 @@ class SimulationApp(ft.Column):
         self.tutorial_mode = tutorial_mode
         
         self.difficulty = difficulty
-        self.adversarial_agent_enabled = difficulty in ["medium", "easy"]
+        self.adversarial_agent_enabled = difficulty in [ "easy"]
 
         self.dark_mode = dark_mode
         self.theme = get_theme_colors(self.dark_mode)
@@ -468,8 +468,10 @@ class SimulationApp(ft.Column):
 
     def prompt_for_username(self):
         async def save_and_show_leaderboard(e):
+            username_dialog.disabled=True
+            username_dialog.update()
             username = self.username_field.value.strip() or "Anonymous"
-            score = self.score
+            score = round(self.score)
             await insert_score(username, score, self.difficulty)
             await insert_interactions(username, self.score, self.interaction_log)
             self.page.close(username_dialog)
@@ -479,7 +481,7 @@ class SimulationApp(ft.Column):
         self.username_field.value = ""
     
         username_dialog = ft.AlertDialog(
-            title=ft.Text(f"Simulation complete! You scored {self.score} points"),
+            title=ft.Text(f"Simulation complete! You scored {round(self.score)} points"),
             content=self.username_field,
             actions=[
                 ft.TextButton("Submit Your Score", on_click=save_and_show_leaderboard),

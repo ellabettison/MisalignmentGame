@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import itertools
 import json
+import math
 
 from tqdm import tqdm
 
@@ -80,7 +81,7 @@ async def run_all_simulations():
     agent_models = ['gemini-1.5-flash-001', 'gemini-2.0-flash-001', 'gemini-1.5-pro']
     difficulties = ['easy', 'medium', 'hard', 'very_hard']
     num_rounds_list = [20]
-    num_simulations_list = [2]
+    num_simulations_list = [3]
 
     all_combinations = list(itertools.product(
         evaluator_models, goal_generators, agent_models,
@@ -116,7 +117,7 @@ async def run_simulations(
     full_history = []
 
     # Create the progress bar
-    total_runs = num_simulations * 2  # 2 policies per simulation
+    total_runs = num_simulations  # 2 policies per simulation
     bar = tqdm(total=total_runs, desc=f"{agent_model} {evaluator_model} ({difficulty})", leave=False, position=1)
 
     semaphore = asyncio.Semaphore(5)  # adjust to limit concurrent tasks
@@ -143,8 +144,8 @@ async def run_simulations(
 
     # Launch all simulation tasks
     tasks = []
-    for _ in range(num_simulations):
-        for policy in [DeceptiveRandomPolicy, AlignedPolicy]:
+    for _ in range(math.ceil(num_simulations/3)):
+        for policy in [DeceptiveRandomPolicy, DeceptiveRandomPolicy, AlignedPolicy]:
             tasks.append(asyncio.create_task(run_one(policy)))
 
     await asyncio.gather(*tasks)

@@ -125,7 +125,7 @@ def make_table(grouped_results, x_field, y_field, metric):
 
 def load_all_conversations(directory="simulation_results"):
     pattern = re.compile(
-        r"chat_history_agent:(?P<agent_model>[^_]+)_(?P<difficulty>[^_]+)_evaluator:(?P<evaluator_model>[^_]+)_goal:(?P<goal_generator>[^.]+)\.json"
+        r"chat_history_agent:(?P<agent_model>[^_]+)_(?P<difficulty>[^.]+)_evaluator:(?P<evaluator_model>[^_]+)_goal:(?P<goal_generator>[^.]+)\.json"
     )
 
     all_convos = []
@@ -152,8 +152,8 @@ def load_all_conversations(directory="simulation_results"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--x_field", default="difficulty", help="Field for X-axis of table")
-    parser.add_argument("--y_field", default="evaluator_model", help="Field for Y-axis of table")
+    parser.add_argument("--x", default="difficulty", help="Field for X-axis of table")
+    parser.add_argument("--y", default="evaluator_model", help="Field for Y-axis of table")
     parser.add_argument("--metric", default="accuracy", choices=["accuracy", "precision", "recall", "avg_turn_guessed"])
     parser.add_argument("--dir", default="simulation_results", help="Directory of simulation JSON files")
     args = parser.parse_args()
@@ -165,6 +165,6 @@ if __name__ == "__main__":
     print(json.dumps(summary, indent=2))
     print()
 
-    df = make_table(flat_results, args.x_field, args.y_field, args.metric)
-    print(f"\nTable of {args.metric} grouped by {args.y_field} vs {args.x_field}:")
+    df = make_table(flat_results, args.x, args.y, args.metric)
+    print(f"\nTable of {args.metric} grouped by {args.y} vs {args.x}:")
     print(df.round(3))

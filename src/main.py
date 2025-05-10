@@ -11,7 +11,7 @@ from databases.interactions_db import init_db as init_interactions
 
 def home_page(page: ft.Page):
     difficulties = ["Easy", "Medium", "Hard", "Very Hard"]
-    difficulty_state = {"index": 2}  # Mutable dictionary to hold index
+    difficulty_state = {"index": 0}  # Mutable dictionary to hold index
     difficulty_controls = ft.Ref[ft.Column]()
 
     def select_difficulty(i):
@@ -101,7 +101,7 @@ async def main(page: ft.Page):
 
     asyncio.create_task(init_dbs())  # Fire and forget
 
-    leaderboard = Leaderboard("hard")
+    leaderboard = Leaderboard("easy")
 
     async def route_change(route):
         
@@ -112,10 +112,10 @@ async def main(page: ft.Page):
         elif page.route == "/loading":
             asyncio.ensure_future(start_full_game(page))
         elif page.route == "/leaderboard":
-            current_difficulty = await page.client_storage.get_async("difficulty") if await page.client_storage.contains_key_async("difficulty") else "hard"
+            current_difficulty = await page.client_storage.get_async("difficulty") if await page.client_storage.contains_key_async("difficulty") else "easy"
             page.views.append(ft.View("/leaderboard", leaderboard.controls, vertical_alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER))
             page.update()
-            leaderboard.difficulty = current_difficulty if current_difficulty.strip() != "" else "hard"
+            leaderboard.difficulty = current_difficulty if current_difficulty.strip() != "" else "easy"
             await leaderboard.did_mount()
         page.update()
 
